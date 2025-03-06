@@ -44,6 +44,9 @@ class Node(ABC):
         self._check_distributions(distributions)
         self.distributions = distributions
 
+    def __str__(self):
+        return f'{self.name}: {self.domain}'
+
 
 class DiscreteNode(Node):
     domain: set
