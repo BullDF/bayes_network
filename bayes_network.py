@@ -57,11 +57,9 @@ class DiscreteNode(Node):
     def check_distributions(self, distributions: dict[tuple[tuple[str, Any]], Distribution]) -> None:
         for conditions, distribution in distributions.items():
             if not isinstance(distribution, DiscreteDistribution):
-                raise ValueError(
-                    f'DiscreteNode {self.name} can only have DiscreteDistribution.')
+                raise ValueError(f'DiscreteNode {self.name} can only have DiscreteDistribution.')
             if self.domain != distribution.domain:
-                raise ValueError(
-                    f'Distribution domain {distribution.domain} does not match node domain {self.domain}.')
+                raise ValueError(f'Distribution domain {distribution.domain} does not match node domain {self.domain}.')
             
             for variable, value in conditions:
                 parent = None
@@ -70,11 +68,9 @@ class DiscreteNode(Node):
                         parent = p
                         break
                 if parent is None:
-                    raise ValueError(
-                        f'Variable {variable} is not a parent of node {self.name}.')
+                    raise ValueError(f'Variable {variable} is not a parent of node {self.name}.')
                 if not parent.is_in_domain(value):
-                    raise ValueError(
-                        f'Value {value} is not in the domain of parent {variable}.')
+                    raise ValueError(f'Value {value} is not in the domain of parent {variable}.')
 
 
 class ContinuousNode(Node):
@@ -89,11 +85,9 @@ class ContinuousNode(Node):
     def check_distributions(self, distributions: dict[tuple[tuple[str, Any]], Distribution]) -> None:
         for conditions, distribution in distributions.items():
             if not isinstance(distribution, ContinuousDistribution):
-                raise ValueError(
-                    f'ContinuousNode {self.name} can only have ContinuousDistribution.')
+                raise ValueError(f'ContinuousNode {self.name} can only have ContinuousDistribution.')
             if self.domain != distribution.domain:
-                raise ValueError(
-                    f'Distribution domain {distribution.domain} does not match node domain {self.domain}.')
+                raise ValueError(f'Distribution domain {distribution.domain} does not match node domain {self.domain}.')
             
             for variable, value in conditions:
                 parent = None
@@ -102,11 +96,9 @@ class ContinuousNode(Node):
                         parent = p
                         break
                 if parent is None:
-                    raise ValueError(
-                        f'Variable {variable} is not a parent of node {self.name}.')
+                    raise ValueError(f'Variable {variable} is not a parent of node {self.name}.')
                 if not parent.is_in_domain(value):
-                    raise ValueError(
-                        f'Value {value} is not in the domain of parent {variable}.')
+                    raise ValueError(f'Value {value} is not in the domain of parent {variable}.')
 
 
 class BayesNetwork:
