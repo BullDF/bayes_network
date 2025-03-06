@@ -8,43 +8,40 @@ class Node(ABC):
     parents: list[Self]
     children: list[Self]
     domain: Any
-    distributions: dict[tuple[tuple[str, Any]], Distribution]
+    distributions: Optional[dict[tuple[tuple[str, Any]], Distribution]]
 
     def __init__(self, name: str) -> None:
         self.name = name
         self.parents = []
         self.children = []
+        self.domain = None
         self.distributions = None
 
     def add_parent(self, parent: Self) -> None:
+        for p in self.parents:
+            if p.name == parent.name:
+                raise ValueError(f'Node {parent.name} is already a parent of node {self.name}.')
         self.parents.append(parent)
 
     def add_child(self, child: Self) -> None:
+        for c in self.children:
+            if c.name == child.name:
+                raise ValueError(f'Node {child.name} is already a child of node {self.name}.')
         self.children.append(child)
-
-    def get_parents(self) -> list[Self]:
-        return self.parents
-
-    def get_children(self) -> list[Self]:
-        return self.children
-
-    @abstractmethod
-    def get_domain(self) -> Union[set, tuple[float, float]]:
-        pass
-
-    @abstractmethod
-    def _check_distributions(self, distributions: dict[tuple[tuple[str, Any]], Distribution]) -> None:
-        pass
 
     @abstractmethod
     def is_in_domain(self, value: Any) -> bool:
         pass
 
+    @abstractmethod
+    def check_distributions(self, distributions: dict[tuple[tuple[str, Any]], Distribution]) -> None:
+        pass
+
     def set_distributions(self, distributions: dict[tuple[tuple[str, Any]], Distribution]) -> None:
-        self._check_distributions(distributions)
+        self.check_distributions(distributions)
         self.distributions = distributions
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.name}: {self.domain}'
 
 
@@ -58,14 +55,15 @@ class DiscreteNode(Node):
     def is_in_domain(self, value: Any) -> bool:
         return value in self.domain
 
-    def _check_distributions(self, distributions: dict[tuple[tuple[str, Any]], Distribution]) -> None:
+    def check_distributions(self, distributions: dict[tuple[tuple[str, Any]], Distribution]) -> None:
         for conditions, distribution in distributions.items():
             if not isinstance(distribution, DiscreteDistribution):
                 raise ValueError(
                     f'DiscreteNode {self.name} can only have DiscreteDistribution.')
-            if distribution.domain != self.domain:
+            if self.domain != distribution.domain:
                 raise ValueError(
                     f'Distribution domain {distribution.domain} does not match node domain {self.domain}.')
+            
             for variable, value in conditions:
                 parent = None
                 for p in self.parents:
@@ -90,14 +88,15 @@ class ContinuousNode(Node):
     def is_in_domain(self, value: Any) -> bool:
         return self.domain[0] < value < self.domain[1]
 
-    def _check_distributions(self, distributions: dict[tuple[tuple[str, Any]], Distribution]) -> None:
+    def check_distributions(self, distributions: dict[tuple[tuple[str, Any]], Distribution]) -> None:
         for conditions, distribution in distributions.items():
             if not isinstance(distribution, ContinuousDistribution):
                 raise ValueError(
                     f'ContinuousNode {self.name} can only have ContinuousDistribution.')
-            if distribution.domain != self.domain:
+            if self.domain != distribution.domain:
                 raise ValueError(
                     f'Distribution domain {distribution.domain} does not match node domain {self.domain}.')
+            
             for variable, value in conditions:
                 parent = None
                 for p in self.parents:
@@ -122,6 +121,9 @@ class BayesNetwork:
         return len(self.nodes)
 
     def add_node(self, node: Node) -> None:
+        for n in self.nodes:
+            if n.name == node.name:
+                raise ValueError(f'Node {node.name} is already in the network.')
         self.nodes.append(node)
 
     def add_edge(self, parent: Node, child: Node) -> None:
