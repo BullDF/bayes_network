@@ -10,11 +10,11 @@ class Node(ABC):
     domain: Any
     distributions: Optional[dict[tuple[tuple[str, Any]], Distribution]]
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, domain: Any) -> None:
         self.name = name
         self.parents = []
         self.children = []
-        self.domain = None
+        self.domain = domain
         self.distributions = None
 
     def add_parent(self, parent: Self) -> None:
@@ -49,8 +49,7 @@ class DiscreteNode(Node):
     domain: set
 
     def __init__(self, name: str, domain: set) -> None:
-        super().__init__(name)
-        self.domain = domain
+        super().__init__(name, domain)
 
     def is_in_domain(self, value: Any) -> bool:
         return value in self.domain
@@ -82,8 +81,7 @@ class ContinuousNode(Node):
     domain: tuple[float, float]
 
     def __init__(self, name: str, domain: tuple[float, float]) -> None:
-        super().__init__(name)
-        self.domain = domain
+        super().__init__(name, domain)
 
     def is_in_domain(self, value: Any) -> bool:
         return self.domain[0] < value < self.domain[1]
