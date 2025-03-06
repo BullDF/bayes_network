@@ -1,13 +1,30 @@
-from typing import List, Self, Union
+from typing import List, Self
+from abc import ABC
+
+
+class Distribution(ABC):
+    pass
+
+
+class DiscreteDistribution(Distribution):
+    pass
+
+
+class ContinuousDistribution(Distribution):
+    pass
 
 
 class Node:
     name: str
     parents: List[Self]
     children: List[Self]
+    distribution: Distribution
 
     def __init__(self, name: str) -> None:
         self.name = name
+        self.parents = []
+        self.children = []
+        self.distribution = None
 
     def add_parent(self, parent: Self) -> None:
         self.parents.append(parent)
@@ -22,40 +39,21 @@ class Node:
         return self.children
 
 
-class DAGM:
+class BayesNetwork:
     nodes: List[Node]
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.nodes = []
 
     def __len__(self) -> int:
         return len(self.nodes)
 
-    def add_node(self, node: Union[Node, str]) -> None:
-        if isinstance(node, str):
-            node = Node(node)
+    def add_node(self, node: Node) -> None:
         self.nodes.append(node)
 
-    def add_edge(self, parent: Union[Node, str], child: Union[Node, str]) -> None:
-        if isinstance(parent, str):
-            parent_node = None
-            for node in self.nodes:
-                if node.name == parent:
-                    parent_node = node
-                    break
-            if parent_node is None:
-                raise ValueError(f"Node {parent} not found in the graph")
-            parent = parent_node
-
-        if isinstance(child, str):
-            child_node = None
-            for node in self.nodes:
-                if node.name == child:
-                    child_node = node
-                    break
-            if child_node is None:
-                raise ValueError(f"Node {child} not found in the graph")
-            child = child_node
-
+    def add_edge(self, parent: Node, child: Node) -> None:
         parent.add_child(child)
         child.add_parent(parent)
+
+    def joint_probability(self):
+        pass
