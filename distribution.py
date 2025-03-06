@@ -6,7 +6,7 @@ class Distribution(ABC):
     domain: Any
     probability_function: Optional[Callable]
 
-    def __init__(self, domain: Any):
+    def __init__(self, domain: Any) -> None:
         self.domain = domain
         self.probability_function = None
 
@@ -15,10 +15,15 @@ class Distribution(ABC):
 
 
 class DiscreteDistribution(Distribution):
-    pass
+    domain: set
+
+    def __init__(self, domain: set) -> None:
+        super().__init__(domain)
 
 
 class ContinuousDistribution(Distribution):
     domain: tuple[float, float]
 
+    def __init__(self, domain: tuple[float, float]) -> None:
+        super().__init__(domain)
 
