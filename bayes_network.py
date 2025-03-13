@@ -2,19 +2,18 @@ from vertex import Vertex
 
 
 class BayesNetwork:
-    nodes: list[Vertex]
+    vertices: dict[str, Vertex]
 
     def __init__(self) -> None:
-        self.nodes = []
+        self.vertices = {}
 
     def __len__(self) -> int:
-        return len(self.nodes)
+        return len(self.vertices)
 
     def add_node(self, vertex: Vertex) -> None:
-        for node in self.nodes:
-            if node.name == vertex.name:
-                raise ValueError(f'Vertex {vertex.name} is already in the network.')
-        self.nodes.append(vertex)
+        if vertex.name in self.vertices:
+            raise ValueError(f'Vertex {vertex.name} already exists in the network.')
+        self.vertices[vertex.name] = vertex
 
     def add_edge(self, parent: Vertex, child: Vertex) -> None:
         parent.add_child(child)
