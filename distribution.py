@@ -1,29 +1,83 @@
-from abc import ABC
-from typing import Any, Callable, Optional
+from typing import Any
+from abc import ABC, abstractmethod
 
 
 class Distribution(ABC):
-    domain: Any
-    probability_function: Optional[Callable]
-
-    def __init__(self, domain: Any) -> None:
-        self.domain = domain
-        self.probability_function = None
-
-    def set_probability_function(self, probability_function: Callable) -> None:
-        self.probability_function = probability_function
-
-
-class DiscreteDistribution(Distribution):
     domain: set
 
-    def __init__(self, domain: set) -> None:
-        super().__init__(domain)
+    @abstractmethod
+    def __call__(self, *args) -> float:
+        pass
 
 
-class ContinuousDistribution(Distribution):
-    domain: tuple[float, float]
+class UnconditionalDistribution(Distribution):
+    distribution: dict[Any, float]
 
-    def __init__(self, domain: tuple[float, float]) -> None:
-        super().__init__(domain)
+    def __init__(self, domain: set, distribution: dict[Any, float]) -> None:
+        self.domain = domain
 
+        if set(distribution.keys()) != domain:
+            raise ValueError('Keys of distribution must match domain.')
+
+        if sum(distribution.values()) != 1:
+            raise ValueError('Probabilities must sum to 1.')
+        
+        for value, prob in distribution.items():
+            if prob < 0 or prob > 1:
+                raise ValueError(f'Probability {prob} is invalid for value {value}.')
+            
+        self.distribution = distribution
+
+    def __call__(self, *args) -> float:
+        if len(args) != 1:
+            raise ValueError('Unconditional distribution requires exactly one argument.')
+        
+        value = args[0]
+        if value not in self.domain:
+            raise ValueError(f'Value {value} not in domain {self.domain}.')
+        return self.distribution[value]
+    
+    def __str__(self) -> str:
+        return str(self.distribution)
+
+
+class ConditionalDistribution(Distribution):
+    distributions: dict[frozenset[str], UnconditionalDistribution]
+
+    def __init__(self, domain: set, distributions: dict[frozenset[str], UnconditionalDistribution]) -> None:
+        self.domain = domain
+
+        for distribution in distributions.values():
+            if distribution.domain != domain:
+                raise ValueError('Domain of distribution must match domain of vertex.')
+
+        self.distributions = distributions
+
+    def __call__(self, *args) -> float:
+        if len(args) != 2:
+            raise ValueError('Conditional distribution requires exactly two arguments.')
+        
+        value = args[0]
+        conditions = args[1]
+        if not isinstance(conditions, dict):
+            raise ValueError('Second argument must be a dictionary of conditions.')
+        
+        if value not in self.domain:
+            raise ValueError(f'Value {value} not in domain {self.domain}.')
+        
+        conditions = frozenset([f'{variable}: {condition}' for variable, condition in conditions.items()])
+        if conditions not in self.distributions:
+            raise ValueError(f'Condition {set(conditions)} is invalid.')
+
+        return self.distributions[conditions](value)
+    
+    def __str__(self) -> str:
+        result = ''
+        for conditions, distribution in self.distributions.items():
+            result += f'{distribution} | '
+            for condition in conditions:
+                result += f'{condition}, '
+            result = result[:-2] + '\n'
+
+        return result
+        
