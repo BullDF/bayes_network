@@ -1,5 +1,6 @@
 from typing import Any
 from abc import ABC, abstractmethod
+from utils import dict_to_frozenset
 
 
 class Distribution(ABC):
@@ -65,9 +66,9 @@ class ConditionalDistribution(Distribution):
         if value not in self.domain:
             raise ValueError(f'Value {value} not in domain {self.domain}.')
         
-        conditions = frozenset([f'{variable}: {condition}' for variable, condition in conditions.items()])
+        conditions = dict_to_frozenset(conditions)
         if conditions not in self.distributions:
-            raise ValueError(f'Condition {set(conditions)} is invalid.')
+            raise ValueError(f'Conditions {set(conditions)} is invalid.')
 
         return self.distributions[conditions](value)
     
