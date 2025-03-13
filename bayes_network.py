@@ -19,5 +19,8 @@ class BayesNetwork:
         parent.add_child(child)
         child.add_parent(parent)
 
+    def find_roots(self) -> list[Vertex]:
+        return [vertex for vertex in self.vertices.values() if not vertex.parents]
+
     def joint_probability(self):
         pass
