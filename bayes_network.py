@@ -33,7 +33,7 @@ class BayesNetwork:
         if not isinstance(values, dict):
             raise ValueError('Values must be provided as a dictionary.')
         if len(values) != len(self.vertices):
-            raise ValueError('Length of values must match number of vertices.')
+            raise ValueError('Length of values must match number of vertices. For joint probabilities with fewer vertices or conditional probabilities, please use the Variable Elimination algorithm.')
         
         vertices = self.find_roots()
         seen = set(vertices)
