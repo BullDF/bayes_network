@@ -1,4 +1,4 @@
-from bayes_network import BayesNetwork, read_bayes_network_from_txt
+from bayes_network import BayesNetwork
 from typing import Any, Union
 from distribution import *
 import random
