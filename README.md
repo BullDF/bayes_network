@@ -1,1 +1,0 @@
-# sta410_hidden_markov_model
