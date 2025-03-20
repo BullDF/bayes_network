@@ -19,7 +19,7 @@ class Factor:
         return f'{self.scope}: {self.distributions}'
     
 
-def check_VE_inputs(bn: BayesNetwork, query: list[str], evidence: dict[str, Any]) -> None:
+def check_VE_inputs(bn: BayesNetwork, query: set[str], evidence: dict[str, Any]) -> None:
     if len(set(evidence)) != len(evidence):
         raise ValueError('Evidence must be unique.')
     
@@ -75,15 +75,14 @@ def create_initial_factors(bn: BayesNetwork, evidence: dict[str, Any]) -> list[F
     return factors
         
 
-def variable_elimination(bn: BayesNetwork, query: list[str], evidence: dict[str, Any]={}) -> dict[frozenset, float]:
+def variable_elimination(bn: BayesNetwork, query: set[str], evidence: dict[str, Any]={}) -> dict[frozenset, float]:
     check_VE_inputs(bn, query, evidence)
     
-    hidden = set(bn.vertices.keys()) - set(query) - set(evidence.keys())
+    hidden = set(bn.vertices.keys()) - query - set(evidence.keys())
     factors = create_initial_factors(bn, evidence)
     
 
 if __name__ == '__main__':
     bn = read_bayes_network_from_txt('ex.txt')
-    print(bn)
     
     result = variable_elimination(bn, ['A'], {'C': True, 'B': False})
