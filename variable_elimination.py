@@ -1,6 +1,5 @@
 from bayes_network import BayesNetwork, read_bayes_network_from_txt
-from typing import Any, Optional
-from utils import str_to_value
+from typing import Any
 from distribution import *
 
 
@@ -152,7 +151,4 @@ def variable_elimination(bn: BayesNetwork, query: set[str], evidence: dict[str, 
 
 
 if __name__ == '__main__':
-    bn = read_bayes_network_from_txt('ex.txt')
-    
-    result = variable_elimination(bn, {'B', 'G'}, {'A': False})
-    print(result)
+    pass
