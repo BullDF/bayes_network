@@ -18,6 +18,9 @@ class Factor:
     def __str__(self) -> str:
         return f'{self.scope}: {self.distributions}'
     
+    def __len__(self) -> int:
+        return len(self.scope)
+    
 
 def check_VE_inputs(bn: BayesNetwork, query: set[str], evidence: dict[str, Any]) -> None:
     if len(set(evidence)) != len(evidence):
@@ -39,50 +42,47 @@ def check_VE_inputs(bn: BayesNetwork, query: set[str], evidence: dict[str, Any])
             raise ValueError(f'Evidence value {value} not in domain of variable {vertex}.')
         
 
-def create_initial_factors(bn: BayesNetwork, evidence: dict[str, Any]) -> list[Factor]:
+def create_initial_factors(bn: BayesNetwork) -> list[Factor]:
     factors = []
     for curr_name, curr_vertex in bn.vertices.items():
-        factor = Factor({curr_name}.union(curr_vertex.parents.keys()))
+        factor = Factor({curr_name}.union(curr_vertex.parents))
 
         if isinstance(curr_vertex.distribution, UnconditionalDistribution):
             for value, prob in curr_vertex.distribution.distribution.items():
-                if curr_name in evidence and value != evidence[curr_name]:
-                    continue
-                
                 factor.add_distribution(frozenset([f'{curr_name}: {value}']), prob)
 
         elif isinstance(curr_vertex.distribution, ConditionalDistribution):
             for conditions, distribution in curr_vertex.distribution.distributions.items():
-                excluded = False
-                for condition in conditions:
-                    colon = condition.index(':')
-                    vertex = condition[:colon]
-                    value = str_to_value(condition[colon + 2:])
-                    if vertex in evidence and value != evidence[vertex]:
-                        excluded = True
-                        break
+                for value, prob in distribution.distribution.items():
+                    factor.add_distribution(conditions.union(frozenset([f'{curr_name}: {value}'])), prob)
 
-                if not excluded:
-                    for value, prob in distribution.distribution.items():
-                        if curr_name in evidence and value != evidence[curr_name]:
-                            continue
-
-                        factor.add_distribution(frozenset([f'{curr_name}: {value}']).union(conditions), prob)
-
-        print(factor)
         factors.append(factor)
 
     return factors
+
+
+def restrict_evidence(evidence: dict[str, Any], factors: list[Factor]) -> None:
+    for i, factor in enumerate(factors):
+        if factor.scope.intersection(evidence):
+            new_factor = Factor(factor.scope - set(evidence))
+            for conditions, prob in factor.distributions.items():
+                new_conditions = conditions - dict_to_frozenset(evidence)
+                if len(new_conditions) == len(new_factor):
+                    new_factor.add_distribution(new_conditions, prob)
+            factors[i] = new_factor
         
 
 def variable_elimination(bn: BayesNetwork, query: set[str], evidence: dict[str, Any]={}) -> dict[frozenset, float]:
     check_VE_inputs(bn, query, evidence)
     
     hidden = set(bn.vertices.keys()) - query - set(evidence.keys())
-    factors = create_initial_factors(bn, evidence)
-    
+    factors = create_initial_factors(bn)
+    restrict_evidence(evidence, factors)
+
+    for factor in factors:
+        print(factor)    
 
 if __name__ == '__main__':
     bn = read_bayes_network_from_txt('ex.txt')
     
-    result = variable_elimination(bn, ['A'], {'C': True, 'B': False})
+    result = variable_elimination(bn, {'A'}, {'C': True, 'B': False})
