@@ -1,5 +1,5 @@
 from bayes_network import BayesNetwork, read_bayes_network_from_txt
-from typing import Any
+from typing import Any, Optional
 from utils import str_to_value
 from distribution import *
 
@@ -78,8 +78,30 @@ def restrict_evidence(evidence: dict[str, Any], factors: list[Factor]) -> list[F
     return new_factors
 
 
+def combine_factors(factors: list[Factor]) -> Factor:
+    while len(factors) > 1:
+        factor1 = factors.pop()
+        factor2 = factors.pop()
+        
+        common_variables = len(factor1.scope.intersection(factor2.scope))
+
+        new_factor = Factor(factor1.scope.union(factor2.scope))
+
+        for conditions1, prob1 in factor1.distributions.items():
+            for conditions2, prob2 in factor2.distributions.items():
+                if len(conditions1.intersection(conditions2)) == common_variables:
+                    new_conditions = conditions1.union(conditions2)
+                    prob = prob1 * prob2
+                    new_factor.add_distribution(new_conditions, prob)
+
+        factors.append(new_factor)
+
+    return factors[0]
+
+
 def eliminate_hidden_variables(bn: BayesNetwork, query: set[str], evidence: dict[str, Any], factors: list[Factor]) -> None:
     hidden = set(bn.vertices.keys()) - query - set(evidence.keys())
+
     for variable in hidden:
         new_factors = []
         curr_factors = []
@@ -90,23 +112,47 @@ def eliminate_hidden_variables(bn: BayesNetwork, query: set[str], evidence: dict
             else:
                 new_factors.append(factor)
 
-        while len(curr_factors) > 1:
-            factor1 = curr_factors.pop()
-            factor2 = curr_factors.pop()
-            pass
+        curr_factor = combine_factors(curr_factors)
+        new_factor = Factor(curr_factor.scope - {variable})
 
-        factors = new_factors + curr_factors
+        while curr_factor.distributions:
+            new_prob = 0
+            conditions, prob = curr_factor.distributions.popitem()
+            new_prob += prob
+
+            for condition in conditions:
+                colon = condition.index(':')
+                if condition[:colon] == variable:
+                    new_conditions = conditions - {condition}
+                    break
+            
+            for value in bn.vertices[variable].domain:
+                if new_conditions.union({f'{variable}: {value}'}) in curr_factor.distributions:
+                    new_prob += curr_factor.distributions.pop(new_conditions.union({f'{variable}: {value}'}))
+            
+            new_factor.add_distribution(new_conditions, new_prob)
+
+        new_factors.append(new_factor)
+        factors = new_factors
+
+    return factors
+
+def normalize_probabilities(factor: Factor) -> dict[frozenset, float]:
+    return {conditions: prob / sum(factor.distributions.values()) for conditions, prob in factor.distributions.items()}
         
 
 def variable_elimination(bn: BayesNetwork, query: set[str], evidence: dict[str, Any]={}) -> dict[frozenset, float]:
     check_VE_inputs(bn, query, evidence)
     factors = create_initial_factors(bn)
     factors = restrict_evidence(evidence, factors)
+    factors = eliminate_hidden_variables(bn, query, evidence, factors)
+    factor = combine_factors(factors)
 
-    for factor in factors:
-        print(factor)
+    return normalize_probabilities(factor)
+
 
 if __name__ == '__main__':
     bn = read_bayes_network_from_txt('ex.txt')
     
-    result = variable_elimination(bn, {'A'}, {'C': True, 'B': False})
+    result = variable_elimination(bn, {'B', 'G'}, {'A': False})
+    print(result)
