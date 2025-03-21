@@ -61,26 +61,50 @@ def create_initial_factors(bn: BayesNetwork) -> list[Factor]:
     return factors
 
 
-def restrict_evidence(evidence: dict[str, Any], factors: list[Factor]) -> None:
-    for i, factor in enumerate(factors):
+def restrict_evidence(evidence: dict[str, Any], factors: list[Factor]) -> list[Factor]:
+    new_factors = []
+    for factor in factors:
         if factor.scope.intersection(evidence):
             new_factor = Factor(factor.scope - set(evidence))
             for conditions, prob in factor.distributions.items():
                 new_conditions = conditions - dict_to_frozenset(evidence)
                 if len(new_conditions) == len(new_factor):
                     new_factor.add_distribution(new_conditions, prob)
-            factors[i] = new_factor
+            if new_factor.scope:
+                new_factors.append(new_factor)
+        else:
+            new_factors.append(factor)
+
+    return new_factors
+
+
+def eliminate_hidden_variables(bn: BayesNetwork, query: set[str], evidence: dict[str, Any], factors: list[Factor]) -> None:
+    hidden = set(bn.vertices.keys()) - query - set(evidence.keys())
+    for variable in hidden:
+        new_factors = []
+        curr_factors = []
+
+        for factor in factors:
+            if variable in factor.scope:
+                curr_factors.append(factor)
+            else:
+                new_factors.append(factor)
+
+        while len(curr_factors) > 1:
+            factor1 = curr_factors.pop()
+            factor2 = curr_factors.pop()
+            pass
+
+        factors = new_factors + curr_factors
         
 
 def variable_elimination(bn: BayesNetwork, query: set[str], evidence: dict[str, Any]={}) -> dict[frozenset, float]:
     check_VE_inputs(bn, query, evidence)
-    
-    hidden = set(bn.vertices.keys()) - query - set(evidence.keys())
     factors = create_initial_factors(bn)
-    restrict_evidence(evidence, factors)
+    factors = restrict_evidence(evidence, factors)
 
     for factor in factors:
-        print(factor)    
+        print(factor)
 
 if __name__ == '__main__':
     bn = read_bayes_network_from_txt('ex.txt')
