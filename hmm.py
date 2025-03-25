@@ -31,7 +31,4 @@ class HiddenMarkovModel(BayesNetwork):
         if emission_distribution.domain != self.observation_domain:
             raise ValueError('Emission distribution domain must match observation domain.')
         self.emission_distribution = emission_distribution
-
-    
-
     
