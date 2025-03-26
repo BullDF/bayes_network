@@ -14,29 +14,29 @@ def ancestral_sampling(bn: BayesNetwork, n: int=1) -> Union[dict[str, Any], list
 
         while vertices:
             curr = vertices.popleft()
-            distribution = curr.distribution
-            if distribution is None:
+            dist = curr.distribution
+            if dist is None:
                 raise ValueError(f'Vertex {curr.name} has no distribution.')
             
-            if isinstance(distribution, UnconditionalDistribution):
+            if isinstance(dist, UncondDist):
                 domain = []
                 probs = []
-                for value, prob in distribution.distribution.items():
+                for value, prob in dist.dist.items():
                     domain.append(value)
                     probs.append(prob)
                 
                 sample[curr.name] = random.choices(domain, probs)[0]
             
-            elif isinstance(distribution, ConditionalDistribution):
+            elif isinstance(dist, CondDist):
                 conditions = dict_to_frozenset({parent: sample[parent] for parent in curr.parents})
 
-                if conditions not in distribution.distributions:
+                if conditions not in dist.dists:
                     vertices.append(curr)
                     continue
 
                 domain = []
                 probs = []
-                for value, prob in distribution.distributions[conditions].distribution.items():
+                for value, prob in dist.dists[conditions].dist.items():
                     domain.append(value)
                     probs.append(prob)
 

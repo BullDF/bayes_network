@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from utils import dict_to_frozenset
 
 
-class Distribution(ABC):
+class Dist(ABC):
     domain: set
 
     @abstractmethod
@@ -11,23 +11,23 @@ class Distribution(ABC):
         pass
 
 
-class UnconditionalDistribution(Distribution):
-    distribution: dict[Any, float]
+class UncondDist(Dist):
+    dist: dict[Any, float]
 
-    def __init__(self, domain: set, distribution: dict[Any, float]) -> None:
+    def __init__(self, domain: set, dist: dict[Any, float]) -> None:
         self.domain = domain
 
-        if set(distribution.keys()) != domain:
+        if set(dist.keys()) != domain:
             raise ValueError('Keys of distribution must match domain.')
 
-        if sum(distribution.values()) != 1:
+        if sum(dist.values()) != 1:
             raise ValueError('Probabilities must sum to 1.')
         
-        for value, prob in distribution.items():
+        for value, prob in dist.items():
             if prob < 0 or prob > 1:
                 raise ValueError(f'Probability {prob} is invalid for value {value}.')
             
-        self.distribution = distribution
+        self.dist = dist
 
     def __call__(self, *args) -> float:
         if len(args) != 1:
@@ -36,23 +36,23 @@ class UnconditionalDistribution(Distribution):
         value = args[0]
         if value not in self.domain:
             raise ValueError(f'Value {value} not in domain {self.domain}.')
-        return self.distribution[value]
+        return self.dist[value]
     
     def __str__(self) -> str:
-        return str(self.distribution)
+        return str(self.dist)
 
 
-class ConditionalDistribution(Distribution):
-    distributions: dict[frozenset[str], UnconditionalDistribution]
+class CondDist(Dist):
+    dists: dict[frozenset[str], UncondDist]
 
-    def __init__(self, domain: set, distributions: dict[frozenset[str], UnconditionalDistribution]) -> None:
+    def __init__(self, domain: set, dists: dict[frozenset[str], UncondDist]) -> None:
         self.domain = domain
 
-        for distribution in distributions.values():
-            if distribution.domain != domain:
+        for dist in dists.values():
+            if dist.domain != domain:
                 raise ValueError('Domain of distribution must match domain of vertex.')
 
-        self.distributions = distributions
+        self.dists = dists
 
     def __call__(self, *args) -> float:
         if len(args) != 2:
@@ -67,15 +67,15 @@ class ConditionalDistribution(Distribution):
             raise ValueError(f'Value {value} not in domain {self.domain}.')
         
         conditions = dict_to_frozenset(conditions)
-        if conditions not in self.distributions:
+        if conditions not in self.dists:
             raise ValueError(f'Conditions {set(conditions)} is invalid.')
 
-        return self.distributions[conditions](value)
+        return self.dists[conditions](value)
     
     def __str__(self) -> str:
         result = ''
-        for conditions, distribution in self.distributions.items():
-            result += f'{distribution} | '
+        for conditions, dist in self.dists.items():
+            result += f'{dist} | '
             for condition in conditions:
                 result += f'{condition}, '
             result = result[:-2] + '\n'
