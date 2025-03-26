@@ -5,17 +5,17 @@ from distribution import *
 
 class Factor:
     scope: set[str]
-    dists: dict[frozenset, float]
+    distributions: dict[frozenset, float]
 
     def __init__(self, scope: set[str]):
         self.scope = scope
-        self.dists = {}
+        self.distributions = {}
 
-    def add_dist(self, conditions: frozenset[str], prob: float) -> None:
-        self.dists[conditions] = prob
+    def add_distribution(self, conditions: frozenset[str], prob: float) -> None:
+        self.distributions[conditions] = prob
     
     def __str__(self) -> str:
-        return f'{self.scope}: {self.dists}'
+        return f'{self.scope}: {self.distributions}'
     
     def __len__(self) -> int:
         return len(self.scope)
@@ -46,14 +46,14 @@ def create_initial_factors(bn: BayesNetwork) -> list[Factor]:
     for curr_name, curr_vertex in bn.vertices.items():
         factor = Factor({curr_name}.union(curr_vertex.parents))
 
-        if isinstance(curr_vertex.dist, UncondDist):
-            for value, prob in curr_vertex.dist.dist.items():
-                factor.add_dist(frozenset([f'{curr_name}: {value}']), prob)
+        if isinstance(curr_vertex.distribution, UnconditionalDistribution):
+            for value, prob in curr_vertex.distribution.distribution.items():
+                factor.add_distribution(frozenset([f'{curr_name}: {value}']), prob)
 
-        elif isinstance(curr_vertex.dist, CondDist):
-            for conditions, dist in curr_vertex.dist.dists.items():
-                for value, prob in dist.dist.items():
-                    factor.add_dist(conditions.union(frozenset([f'{curr_name}: {value}'])), prob)
+        elif isinstance(curr_vertex.distribution, ConditionalDistribution):
+            for conditions, distribution in curr_vertex.distribution.distributions.items():
+                for value, prob in distribution.distribution.items():
+                    factor.add_distribution(conditions.union(frozenset([f'{curr_name}: {value}'])), prob)
 
         factors.append(factor)
 
@@ -65,10 +65,10 @@ def restrict_evidence(evidence: dict[str, Any], factors: list[Factor]) -> list[F
     for factor in factors:
         if factor.scope.intersection(evidence):
             new_factor = Factor(factor.scope - set(evidence))
-            for conditions, prob in factor.dists.items():
+            for conditions, prob in factor.distributions.items():
                 new_conditions = conditions - dict_to_frozenset(evidence)
                 if len(new_conditions) == len(new_factor):
-                    new_factor.add_dist(new_conditions, prob)
+                    new_factor.add_distribution(new_conditions, prob)
             if new_factor.scope:
                 new_factors.append(new_factor)
         else:
@@ -86,12 +86,12 @@ def combine_factors(factors: list[Factor]) -> Factor:
 
         new_factor = Factor(factor1.scope.union(factor2.scope))
 
-        for conditions1, prob1 in factor1.dists.items():
-            for conditions2, prob2 in factor2.dists.items():
+        for conditions1, prob1 in factor1.distributions.items():
+            for conditions2, prob2 in factor2.distributions.items():
                 if len(conditions1.intersection(conditions2)) == common_variables:
                     new_conditions = conditions1.union(conditions2)
                     prob = prob1 * prob2
-                    new_factor.add_dist(new_conditions, prob)
+                    new_factor.add_distribution(new_conditions, prob)
 
         factors.append(new_factor)
 
@@ -114,9 +114,9 @@ def eliminate_hidden_variables(bn: BayesNetwork, query: set[str], evidence: dict
         curr_factor = combine_factors(curr_factors)
         new_factor = Factor(curr_factor.scope - {variable})
 
-        while curr_factor.dists:
+        while curr_factor.distributions:
             new_prob = 0
-            conditions, prob = curr_factor.dists.popitem()
+            conditions, prob = curr_factor.distributions.popitem()
             new_prob += prob
 
             for condition in conditions:
@@ -126,10 +126,10 @@ def eliminate_hidden_variables(bn: BayesNetwork, query: set[str], evidence: dict
                     break
             
             for value in bn.vertices[variable].domain:
-                if new_conditions.union({f'{variable}: {value}'}) in curr_factor.dists:
-                    new_prob += curr_factor.dists.pop(new_conditions.union({f'{variable}: {value}'}))
+                if new_conditions.union({f'{variable}: {value}'}) in curr_factor.distributions:
+                    new_prob += curr_factor.distributions.pop(new_conditions.union({f'{variable}: {value}'}))
             
-            new_factor.add_dist(new_conditions, new_prob)
+            new_factor.add_distribution(new_conditions, new_prob)
 
         new_factors.append(new_factor)
         factors = new_factors
@@ -137,7 +137,7 @@ def eliminate_hidden_variables(bn: BayesNetwork, query: set[str], evidence: dict
     return factors
 
 def normalize_probabilities(factor: Factor) -> dict[frozenset, float]:
-    return {conditions: prob / sum(factor.dists.values()) for conditions, prob in factor.dists.items()}
+    return {conditions: prob / sum(factor.distributions.values()) for conditions, prob in factor.distributions.items()}
         
 
 def variable_elimination(bn: BayesNetwork, query: set[str], evidence: dict[str, Any]={}) -> dict[frozenset, float]:

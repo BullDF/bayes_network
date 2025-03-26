@@ -2,7 +2,7 @@ from vertex import Vertex
 import re
 from utils import strs_to_domain, str_to_value
 from collections import defaultdict
-from distribution import UncondDist, CondDist
+from distribution import UnconditionalDistribution, ConditionalDistribution
 
 
 class BayesNetwork:
@@ -14,7 +14,7 @@ class BayesNetwork:
     def __len__(self) -> int:
         return len(self.vertices)
 
-    def add_vertex(self, vertex: Vertex) -> None:
+    def add_node(self, vertex: Vertex) -> None:
         if vertex.name in self.vertices:
             raise ValueError(f'Vertex {vertex.name} already exists in the network.')
         self.vertices[vertex.name] = vertex
@@ -60,11 +60,11 @@ class BayesNetwork:
         return prob
     
 
-def read_vars(bn: BayesNetwork, data: str) -> None:
+def read_variables(bn: BayesNetwork, data: str) -> None:
     pattern = re.compile(r"(\w+): \{([^}]+)\}")
     variables = {match.group(1): strs_to_domain(match.group(2).split(", ")) for match in pattern.finditer(data)}
     for variable, domain in variables.items():
-        bn.add_vertex(Vertex(variable, domain))
+        bn.add_node(Vertex(variable, domain))
 
 
 def read_edges(bn: BayesNetwork, data: str) -> None:
@@ -74,38 +74,38 @@ def read_edges(bn: BayesNetwork, data: str) -> None:
         bn.add_edge(bn.vertices[parent], bn.vertices[child])
 
 
-def read_uncond_probs(bn: BayesNetwork, data: str) -> None:
+def read_unconditional_probabilities(bn: BayesNetwork, data: str) -> None:
     pattern = re.compile(r"P\((\w+) = (\w+)\) = ([\d.]+)")
     probabilities = {(m.group(1), m.group(2)): float(m.group(3)) for m in pattern.finditer(data)}
     domains = defaultdict(set)
-    dists = defaultdict(dict)
+    distributions = defaultdict(dict)
     for (variable, value), prob in probabilities.items():
         value = str_to_value(value)
         domains[variable].add(value)
-        dists[variable][value] = prob
+        distributions[variable][value] = prob
 
     for variable in domains:
-        bn.vertices[variable].set_distribution(UncondDist(
+        bn.vertices[variable].set_distribution(UnconditionalDistribution(
             domain=domains[variable],
-            dist=dists[variable]
+            distribution=distributions[variable]
         ))
 
 
-def read_cond_probs(bn: BayesNetwork, data: str) -> None:
+def read_conditional_probabilities(bn: BayesNetwork, data: str) -> None:
     pattern = re.compile(r"P\((\w+) = (\w+) \| (.+?)\) = ([\d.]+)")
     probabilities = {(m.group(1), m.group(2), tuple(re.sub(r"(\w+) = (\w+)", r"\1: \2", m.group(3)).split(", "))): float(m.group(4)) for m in pattern.finditer(data)}
     
     domains = defaultdict(set)
-    dists = defaultdict(lambda: defaultdict(dict))
-    for (var, value, conditions), prob in probabilities.items():
+    distributions = defaultdict(lambda: defaultdict(dict))
+    for (variable, value, conditions), prob in probabilities.items():
         value = str_to_value(value)
-        domains[var].add(value)
-        dists[var][frozenset(conditions)][value] = prob
+        domains[variable].add(value)
+        distributions[variable][frozenset(conditions)][value] = prob
     
-    for var in domains:
-        domain = domains[var]
-        var_dist = CondDist(domain, {conditions: UncondDist(domain, probs) for conditions, probs in dists[var].items()})
-        bn.vertices[var].set_distribution(var_dist)
+    for variable in domains:
+        domain = domains[variable]
+        variable_distribution = ConditionalDistribution(domain, {conditions: UnconditionalDistribution(domain, probs) for conditions, probs in distributions[variable].items()})
+        bn.vertices[variable].set_distribution(variable_distribution)
 
 
 def read_bayes_network_from_txt(file_name: str) -> BayesNetwork:
@@ -113,10 +113,10 @@ def read_bayes_network_from_txt(file_name: str) -> BayesNetwork:
     
     with open(file_name, 'r') as file:
         data = file.read()
-        read_vars(bn, data)
+        read_variables(bn, data)
         read_edges(bn, data)
-        read_uncond_probs(bn, data)
-        read_cond_probs(bn, data)
+        read_unconditional_probabilities(bn, data)
+        read_conditional_probabilities(bn, data)
 
     return bn
 

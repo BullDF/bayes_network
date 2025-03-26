@@ -7,17 +7,17 @@ class Vertex:
     domain: set
     parents: dict[str, Self]
     children: dict[str, Self]
-    dist: Optional[Dist]
+    distribution: Optional[Distribution]
 
     def __init__(self, name: str, domain: set) -> None:
         self.name = name
         self.domain = domain
         self.parents = {}
         self.children = {}
-        self.dist = None
+        self.distribution = None
 
     def add_parent(self, parent: Self) -> None:
-        if self.dist is not None:
+        if self.distribution is not None:
             raise ValueError('Cannot add parent to vertex with distribution.')
         if parent.name in self.parents:
             raise ValueError(f'Vertex {parent.name} is already a parent of vertex {self.name}.')
@@ -36,12 +36,12 @@ class Vertex:
     def in_domain(self, value: Any) -> bool:
         return value in self.domain
     
-    def set_distribution(self, distribution: Dist) -> None:
+    def set_distribution(self, distribution: Distribution) -> None:
         if distribution.domain != self.domain:
             raise ValueError('Domain of distribution must match domain of vertex.')
         
         if self.parents:
-            if isinstance(distribution, UncondDist):
+            if isinstance(distribution, UnconditionalDistribution):
                 raise ValueError('Vertex with parents cannot have unconditional distribution.')
             for conditions in distribution.distributions.keys():
                 if len(conditions) != len(self.parents):
@@ -56,15 +56,15 @@ class Vertex:
                         raise ValueError(f'Value {value} is not in domain of parent {parent}.')
 
         elif not self.parents:
-            if isinstance(distribution, CondDist):
+            if isinstance(distribution, ConditionalDistribution):
                 raise ValueError('Vertex without parents cannot have conditional distribution.')
                 
-        self.dist = distribution
+        self.distribution = distribution
 
     def __str__(self) -> str:
         return f'{self.name}: {self.domain}'
     
     def __call__(self, *args):
-        if self.dist is None:
+        if self.distribution is None:
             raise ValueError('Vertex has no distribution.')
-        return self.dist(*args)
+        return self.distribution(*args)
