@@ -54,6 +54,14 @@
 
 \section{Preface \& Acknowledgements}
 
+One day before class, I was talking with Jae and Liam, two other students in STA410, about coming up with a cool name for our Python packages, and I was like ``Oh man I hate coming up with names!'' I do think that cool package names are good, and I admire people coming up with names like \texttt{PyTorch} and \texttt{Beautiful Soup} (when I first learned to use \texttt{Beautiful Soup} I was very confused how this is an HTML parsing library). But yeah, coming up with names doesn't work for me. Just \texttt{BayesNetwork}, or \texttt{BayesianNetwork}. It's cool. It's straightforward. No need to ponder on why \texttt{Beautiful Soup} is for HTML.
+
+Bayesian Network, a variational model for exact inference. The first time I familiarized with this concept was in CSC384, and I thought that this model seems very versatile and powerful. The exposure to the D-Separation, Variable Elimination, and Viterbi algorithms in this course kept my interest in this model. Upon finishing CSC384, I never thought that I would encounter this concept again in CSC412, presented in a more theoretical and mathematical way. What's more, for the third time I was taught Hidden Markov Model in STA410, and I just can't throw this concept out of my mind now. Well, it's something that interests me, so I quickly chose this model to do as my STA410 project.
+
+Here I would like to express my sincere gratitude to Professor Alice Gao in CSC384 for introducing Bayesian Network to me in a very entertaining way, to Professor Denys Linkov/Murat Erdogdu in CSC412/STA414 for incorporating theories of this model into the course, and definitely to Professor Scott Schwartz in STA410 for providing this project opportunity to me to have this model implemented in Python.
+
+\copyright \ Copyright 2025 Johnny Meng
+
 \pagebreak
 
 \section{Bayesian Network}
@@ -271,15 +279,10 @@ This attribute defines the set of possible values for the random variable.
 
 \begin{minted}{python}
     parents: dict[str, Self]
-\end{minted}
-
-This attribute holds a list of the vertex's parents in the Bayesian Network. The keys of the dictionary are the names of the parents, and the values are the corresponding \texttt{Vertex} objects.
-
-\begin{minted}{python}
     children: dict[str, Self]
 \end{minted}
 
-Similar to the \texttt{parents} attribute, this attribute holds a list of the vertex's children in the Bayesian Network. The keys of the dictionary are the names of the children, and the values are the corresponding \texttt{Vertex} objects.
+These two attributes hold the parents and children of the vertex in the Bayesian Network. The keys of the dictionaries are the names of the vertices, and the values are the corresponding \texttt{Vertex} objects.
 
 \begin{minted}{python}
     distribution: Optional[Distribution]
@@ -430,7 +433,7 @@ To wrap up this section, below is an example of how to use the function to creat
         5
     \end{minted}
 
-    For some joint probability computations:
+    Regarding joint probability computations:
     \begin{align*}
         \P(A=1, B=0, C=1, D=1, E=0) &= \P(A=1)\P(B=0|A=1)\P(C=1|A=1)\P(D=1|B=0,C=1)\P(E=0|C=1) \\
         &= 0.5 \cdot 0.2 \cdot 0.7 \cdot 0.4 \cdot 0.5 \\
