@@ -10,6 +10,9 @@ class Distribution(ABC):
     def __call__(self, *args) -> float:
         pass
 
+    def __repr__(self):
+        return self.__str__()
+
 
 class UnconditionalDistribution(Distribution):
     distribution: dict[Any, float]
