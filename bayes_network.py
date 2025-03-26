@@ -20,6 +20,10 @@ class BayesNetwork:
         self.vertices[vertex.name] = vertex
 
     def add_edge(self, parent: Vertex, child: Vertex) -> None:
+        if parent.name not in self.vertices:
+            raise ValueError(f'Parent vertex {parent.name} does not exist in the network.')
+        if child.name not in self.vertices:
+            raise ValueError(f'Child vertex {child.name} does not exist in the network.')
         parent.add_child(child)
         child.add_parent(parent)
 
