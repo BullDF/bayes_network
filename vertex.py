@@ -64,7 +64,10 @@ class Vertex:
     def __str__(self) -> str:
         return f'{self.name}: {self.domain}'
     
-    def __call__(self, *args):
+    def __call__(self, *args) -> float:
         if self.distribution is None:
             raise ValueError('Vertex has no distribution.')
         return self.distribution(*args)
+    
+    def __repr__(self) -> str:
+        return self.__str__()
