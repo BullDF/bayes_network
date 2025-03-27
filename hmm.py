@@ -1,34 +1,116 @@
 from bayes_network import BayesNetwork
 from distribution import *
 from typing import Optional
+from vertex import Vertex
+from utils import *
+import re
+from collections import defaultdict
 
 
 class HiddenMarkovModel(BayesNetwork):
-    hidden_domain: set
-    observation_domain: set
-    initial_distribution: Optional[UnconditionalDistribution]
-    transition_distribution: Optional[ConditionalDistribution]
-    emission_distribution: Optional[ConditionalDistribution]
+    time_step: Optional[int]
+    hidden_domain: Optional[set]
+    observation_domain: Optional[set]
 
-    def __init__(self, hidden_domain: set, observation_domain: set):
+    def __init__(self) -> None:
+        super().__init__()
+        self.time_step = None
+        self.hidden_domain = None
+        self.observation_domain = None
+
+    def set_time_step(self, time_step: int) -> None:
+        if not isinstance(time_step, int) or time_step < 0:
+            raise ValueError('Time step must be a non-negative integer.')
+        self.time_step = time_step
+
+    def set_hidden_domain(self, hidden_domain: set) -> None:
+        if not isinstance(hidden_domain, set):
+            raise ValueError('Hidden domain must be a set.')
         self.hidden_domain = hidden_domain
-        self.observation_domain = observation_domain
-        self.initial_distribution = None
-        self.transition_distribution = None
-        self.emission_distribution = None
-
-    def set_initial_distribution(self, initial_distribution: UnconditionalDistribution) -> None:
-        if initial_distribution.domain != self.hidden_domain:
-            raise ValueError('Initial distribution domain must match hidden domain.')
-        self.initial_distribution = initial_distribution
-
-    def set_transition_distribution(self, transition_distribution: ConditionalDistribution) -> None:
-        if transition_distribution.domain != self.hidden_domain:
-            raise ValueError('Transition distribution domain must match hidden domain.')
-        self.transition_distribution = transition_distribution
-
-    def set_emission_distribution(self, emission_distribution: ConditionalDistribution) -> None:
-        if emission_distribution.domain != self.observation_domain:
-            raise ValueError('Emission distribution domain must match observation domain.')
-        self.emission_distribution = emission_distribution
     
+    def set_observation_domain(self, observation_domain: set) -> None:
+        if not isinstance(observation_domain, set):
+            raise ValueError('Observation domain must be a set.')
+        self.observation_domain = observation_domain
+
+
+def read_time_step(hmm: HiddenMarkovModel, data: str) -> None:
+    pattern = re.compile(r"t = (\d+)")
+    match = pattern.search(data)
+    time_step = int(match.group(1))
+    hmm.set_time_step(time_step)
+
+    
+def read_variables(hmm: HiddenMarkovModel, data: str) -> None:
+    pattern = re.compile(r"(\w+): \{([^}]+)\}")
+    variables = {match.group(1): strs_to_domain(match.group(2).split(", ")) for match in pattern.finditer(data)}
+    
+    hmm.set_hidden_domain(variables['Z'])
+    hmm.set_observation_domain(variables['X'])
+
+    hmm.add_node(Vertex('Z0', hmm.hidden_domain))
+    hmm.add_node(Vertex('X0', hmm.observation_domain))
+    hmm.add_edge(hmm.vertices['Z0'], hmm.vertices['X0'])
+
+    for i in range(1, hmm.time_step + 1):
+        hmm.add_node(Vertex(f'Z{i}', hmm.hidden_domain))
+        hmm.add_node(Vertex(f'X{i}', hmm.observation_domain))
+        hmm.add_edge(hmm.vertices[f'Z{i - 1}'], hmm.vertices[f'Z{i}'])
+        hmm.add_edge(hmm.vertices[f'Z{i}'], hmm.vertices[f'X{i}'])
+
+
+def read_initial_distribution(hmm: HiddenMarkovModel, data: str) -> None:
+    pattern = re.compile(r"P\(Z = (\d+)\) = ([\d.]+)")
+    probabilities = {m.group(1): float(m.group(2)) for m in pattern.finditer(data)}
+    distribution = UnconditionalDistribution(hmm.hidden_domain, {str_to_value(value): prob for value, prob in probabilities.items()})
+    hmm.vertices['Z0'].set_distribution(distribution)
+
+
+def read_transition_distribution(hmm: HiddenMarkovModel, data: str) -> None:
+    pattern = re.compile(r"P\(Z = (\d+) \| Z = (\d+)\) = ([\d.]+)")
+    probabilities = {(m.group(1), m.group(2)): float(m.group(3)) for m in pattern.finditer(data)}
+    distributions = defaultdict(lambda: defaultdict(dict))
+    for (curr, prev), prob in probabilities.items():
+        distributions[prev][curr] = prob
+
+    for i in range(1, hmm.time_step + 1):
+        variable_distribution = {}
+        for prev, dist in distributions.items():
+            key = frozenset([f'Z{i - 1}: {prev}'])
+            variable_distribution[key] = UnconditionalDistribution(hmm.hidden_domain, {str_to_value(value): prob for value, prob in dist.items()})
+
+        hmm.vertices[f'Z{i}'].set_distribution(ConditionalDistribution(hmm.hidden_domain, variable_distribution))
+
+
+def read_emission_distribution(hmm: HiddenMarkovModel, data: str) -> None:
+    pattern = re.compile(r"P\(X = (\d+) \| Z = (\d+)\) = ([\d.]+)")
+    probabilities = {(m.group(1), m.group(2)): float(m.group(3)) for m in pattern.finditer(data)}
+    distributions = defaultdict(lambda: defaultdict(dict))
+    for (obs, state), prob in probabilities.items():
+        distributions[state][obs] = prob
+
+    for i in range(0, hmm.time_step + 1):
+        variable_distribution = {}
+        for state, dist in distributions.items():
+            key = frozenset([f'Z{i}: {state}'])
+            variable_distribution[key] = UnconditionalDistribution(hmm.observation_domain, {str_to_value(value): prob for value, prob in dist.items()})
+
+        hmm.vertices[f'X{i}'].set_distribution(ConditionalDistribution(hmm.observation_domain, variable_distribution))
+
+
+def read_hmm_from_txt(file_name: str) -> HiddenMarkovModel:
+    hmm = HiddenMarkovModel()
+    with open(file_name, 'r') as file:
+        data = file.read()
+        read_time_step(hmm, data)
+        read_variables(hmm, data)
+        read_initial_distribution(hmm, data)
+        read_transition_distribution(hmm, data)
+        read_emission_distribution(hmm, data)
+
+    return hmm
+        
+
+if __name__ == "__main__":
+    hmm = read_hmm_from_txt('hmm.txt')
+    print(hmm({'Z0': 1, 'X0': 0, 'Z1': 0, 'X1': 1, 'Z2': 0, 'X2': 1}))
