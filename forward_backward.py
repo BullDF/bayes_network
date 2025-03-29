@@ -7,6 +7,9 @@ def normalize(probs: dict[Any, float]) -> dict[Any, float]:
 
 
 def forward_base(hmm: HiddenMarkovModel, initial_obs: Any) -> dict[Any, float]:
+    if initial_obs not in hmm.observation_domain:
+        raise ValueError(f'Observation {initial_obs} not in observation domain.')
+    
     alpha = {}
     for value in hmm.hidden_domain:
         alpha[value] = hmm.initial_distribution(value) * hmm.emission_distribution(initial_obs, {'Zt': value})
@@ -29,6 +32,9 @@ def prediction_step(hmm: HiddenMarkovModel, prev_alpha: dict[Any, float]) -> dic
 
 
 def forward_step(hmm: HiddenMarkovModel, probs: dict[Any, float], curr_obs: Any) -> dict[Any, float]:
+    if curr_obs not in hmm.observation_domain:
+        raise ValueError(f'Observation {curr_obs} not in observation domain.')
+    
     alpha = {}
     for value in hmm.hidden_domain:
         alpha[value] = probs[value] * hmm.emission_distribution(curr_obs, {'Zt': value})
@@ -53,7 +59,40 @@ def filtering(hmm: HiddenMarkovModel, observations: list) -> dict[Any, float]:
     return forward(hmm, observations, t=len(observations) - 1)
 
 
+def backward_step(hmm: HiddenMarkovModel, prev_beta: dict[Any, float], curr_obs: Any) -> dict[Any, float]:
+    if curr_obs not in hmm.observation_domain:
+        raise ValueError(f'Observation {curr_obs} not in observation domain.')
+    
+    beta = {}
+    for i in hmm.hidden_domain:
+        sum_i = 0
+        for j in hmm.hidden_domain:
+            transition_prob = hmm.transition_distribution(j, {'Zt-1': i})
+            emission_prob = hmm.emission_distribution(curr_obs, {'Zt': j})
+            sum_i += prev_beta[j] * transition_prob * emission_prob
+        beta[i] = sum_i
+
+    normalized_beta = normalize(beta)
+    return normalized_beta
+
+
+def backward(hmm: HiddenMarkovModel, observations: list, t: int=0) -> dict[Any, float]:
+    if t < 0:
+        raise ValueError('Time step t must be non-negative.')
+    if t >= len(observations):
+        raise ValueError('Time step t must be less than the length of observations.')
+    
+    beta = {value: 1 / len(hmm.hidden_domain) for value in hmm.hidden_domain}
+
+    for i in range(len(observations) - 2, t - 1, -1):
+        print(i)
+        beta = backward_step(hmm, beta, observations[i + 1])
+
+    return beta
+
+
 if __name__ == "__main__":
     hmm = read_hmm_from_txt('hmm_ex.txt')
-    print(forward(hmm, [1, 0, 1, 0, 0], t=4))
-    print(filtering(hmm, [1, 0, 1, 0, 0]))
+    # print(forward(hmm, [1, 0, 1, 0, 0], t=4))
+    # print(filtering(hmm, [1, 0, 1, 0, 0]))
+    print(backward(hmm, [0, 1, 0], 0))
