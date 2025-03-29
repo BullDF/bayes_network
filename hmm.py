@@ -81,7 +81,7 @@ def read_variables(hmm: HiddenMarkovModel, data: str) -> None:
 
 
 def read_initial_distribution(hmm: HiddenMarkovModel, data: str) -> None:
-    pattern = re.compile(r"P\(Z = (\d+)\) = ([\d.]+)")
+    pattern = re.compile(r"P\(Z = (\w+)\) = ([\d.]+)")
     probabilities = {m.group(1): float(m.group(2)) for m in pattern.finditer(data)}
     distribution = UnconditionalDistribution(hmm.hidden_domain, {str_to_value(value): prob for value, prob in probabilities.items()})
     hmm.vertices['Z0'].set_distribution(distribution)
@@ -89,7 +89,7 @@ def read_initial_distribution(hmm: HiddenMarkovModel, data: str) -> None:
 
 
 def read_transition_distribution(hmm: HiddenMarkovModel, data: str) -> None:
-    pattern = re.compile(r"P\(Z = (\d+) \| Z = (\d+)\) = ([\d.]+)")
+    pattern = re.compile(r"P\(Z = (\w+) \| Z = (\w+)\) = ([\d.]+)")
     probabilities = {(m.group(1), m.group(2)): float(m.group(3)) for m in pattern.finditer(data)}
     distributions = defaultdict(lambda: defaultdict(dict))
     for (curr, prev), prob in probabilities.items():
@@ -111,7 +111,7 @@ def read_transition_distribution(hmm: HiddenMarkovModel, data: str) -> None:
 
 
 def read_emission_distribution(hmm: HiddenMarkovModel, data: str) -> None:
-    pattern = re.compile(r"P\(X = (\d+) \| Z = (\d+)\) = ([\d.]+)")
+    pattern = re.compile(r"P\(X = (\w+) \| Z = (\w+)\) = ([\d.]+)")
     probabilities = {(m.group(1), m.group(2)): float(m.group(3)) for m in pattern.finditer(data)}
     distributions = defaultdict(lambda: defaultdict(dict))
     for (obs, state), prob in probabilities.items():
