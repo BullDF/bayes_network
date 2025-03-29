@@ -83,5 +83,5 @@ class ConditionalDistribution(Distribution):
                 result += f'{condition}, '
             result = result[:-2] + '\n'
 
-        return result
+        return result.strip()
         
