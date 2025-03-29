@@ -11,12 +11,18 @@ class HiddenMarkovModel(BayesNetwork):
     time_step: Optional[int]
     hidden_domain: Optional[set]
     observation_domain: Optional[set]
+    initial_distribution: Optional[UnconditionalDistribution]
+    hidden_distribution: Optional[ConditionalDistribution]
+    emission_distribution: Optional[ConditionalDistribution]
 
     def __init__(self) -> None:
         super().__init__()
         self.time_step = None
         self.hidden_domain = None
         self.observation_domain = None
+        self.initial_distribution = None
+        self.hidden_distribution = None
+        self.emission_distribution = None
 
     def set_time_step(self, time_step: int) -> None:
         if not isinstance(time_step, int) or time_step < 0:
@@ -33,9 +39,24 @@ class HiddenMarkovModel(BayesNetwork):
             raise ValueError('Observation domain must be a set.')
         self.observation_domain = observation_domain
 
+    def set_initial_distribution(self, initial_distribution: UnconditionalDistribution) -> None:
+        if not isinstance(initial_distribution, UnconditionalDistribution):
+            raise ValueError('Initial distribution must be an UnconditionalDistribution.')
+        self.initial_distribution = initial_distribution
+    
+    def set_hidden_distribution(self, hidden_distribution: ConditionalDistribution) -> None:
+        if not isinstance(hidden_distribution, ConditionalDistribution):
+            raise ValueError('Hidden distribution must be a ConditionalDistribution.')
+        self.hidden_distribution = hidden_distribution
+
+    def set_emission_distribution(self, emission_distribution: ConditionalDistribution) -> None:
+        if not isinstance(emission_distribution, ConditionalDistribution):
+            raise ValueError('Emission distribution must be a ConditionalDistribution.')
+        self.emission_distribution = emission_distribution
+
 
 def read_time_step(hmm: HiddenMarkovModel, data: str) -> None:
-    pattern = re.compile(r"t = (\d+)")
+    pattern = re.compile(r"T = (\d+)")
     match = pattern.search(data)
     time_step = int(match.group(1))
     hmm.set_time_step(time_step)
@@ -64,6 +85,7 @@ def read_initial_distribution(hmm: HiddenMarkovModel, data: str) -> None:
     probabilities = {m.group(1): float(m.group(2)) for m in pattern.finditer(data)}
     distribution = UnconditionalDistribution(hmm.hidden_domain, {str_to_value(value): prob for value, prob in probabilities.items()})
     hmm.vertices['Z0'].set_distribution(distribution)
+    hmm.set_initial_distribution(distribution)
 
 
 def read_transition_distribution(hmm: HiddenMarkovModel, data: str) -> None:
@@ -72,6 +94,12 @@ def read_transition_distribution(hmm: HiddenMarkovModel, data: str) -> None:
     distributions = defaultdict(lambda: defaultdict(dict))
     for (curr, prev), prob in probabilities.items():
         distributions[prev][curr] = prob
+
+    transition_distribution = {}
+    for prev, dist in distributions.items():
+        key = frozenset([f'Zt-1: {prev}'])
+        transition_distribution[key] = UnconditionalDistribution(hmm.hidden_domain, {str_to_value(value): prob for value, prob in dist.items()})
+    hmm.set_hidden_distribution(ConditionalDistribution(hmm.hidden_domain, transition_distribution))
 
     for i in range(1, hmm.time_step + 1):
         variable_distribution = {}
@@ -88,6 +116,12 @@ def read_emission_distribution(hmm: HiddenMarkovModel, data: str) -> None:
     distributions = defaultdict(lambda: defaultdict(dict))
     for (obs, state), prob in probabilities.items():
         distributions[state][obs] = prob
+
+    emission_distribution = {}
+    for state, dist in distributions.items():
+        key = frozenset([f'Zt: {state}'])
+        emission_distribution[key] = UnconditionalDistribution(hmm.observation_domain, {str_to_value(value): prob for value, prob in dist.items()})
+    hmm.set_emission_distribution(ConditionalDistribution(hmm.observation_domain, emission_distribution))
 
     for i in range(0, hmm.time_step + 1):
         variable_distribution = {}
@@ -114,3 +148,6 @@ def read_hmm_from_txt(file_name: str) -> HiddenMarkovModel:
 if __name__ == "__main__":
     hmm = read_hmm_from_txt('hmm.txt')
     print(hmm({'Z0': 1, 'X0': 0, 'Z1': 0, 'X1': 1, 'Z2': 0, 'X2': 1}))
+    print(hmm.initial_distribution)
+    print(hmm.hidden_distribution)
+    print(hmm.emission_distribution)
