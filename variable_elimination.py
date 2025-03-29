@@ -1,6 +1,7 @@
 from bayes_network import BayesNetwork, read_bayes_network_from_txt
 from typing import Any
 from distribution import *
+from hmm import read_hmm_from_txt
 
 
 class Factor:
@@ -19,6 +20,9 @@ class Factor:
     
     def __len__(self) -> int:
         return len(self.scope)
+    
+    def __repr__(self) -> str:
+        return self.__str__()
     
 
 def check_VE_inputs(bn: BayesNetwork, query: set[str], evidence: dict[str, Any]) -> None:
