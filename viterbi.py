@@ -48,5 +48,4 @@ def viterbi(hmm: HiddenMarkovModel, observations: list) -> list:
 
 
 if __name__ == "__main__":
-    hmm = read_hmm_from_txt('hmm_ex.txt')
-    print(viterbi(hmm, [1, 0, 1, 0, 0]))
+    pass
