@@ -37,7 +37,7 @@ def forward_step(hmm: HiddenMarkovModel, probs: dict[Any, float], curr_obs: Any)
     return normalized_alpha
 
 
-def forward(hmm: HiddenMarkovModel, observations: list, t: int=0) -> dict:
+def forward(hmm: HiddenMarkovModel, observations: list, t: int=0) -> dict[Any, float]:
     if t < 0:
         raise ValueError('Time step t must be non-negative.')
     
@@ -49,6 +49,11 @@ def forward(hmm: HiddenMarkovModel, observations: list, t: int=0) -> dict:
     return alpha
 
 
+def filtering(hmm: HiddenMarkovModel, observations: list) -> dict[Any, float]:
+    return forward(hmm, observations, t=len(observations) - 1)
+
+
 if __name__ == "__main__":
     hmm = read_hmm_from_txt('hmm_ex.txt')
-    print(forward(hmm, [1, 0, 1, 0, 0], t=3))
+    print(forward(hmm, [1, 0, 1, 0, 0], t=4))
+    print(filtering(hmm, [1, 0, 1, 0, 0]))
