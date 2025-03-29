@@ -85,14 +85,25 @@ def backward(hmm: HiddenMarkovModel, observations: list, t: int=0) -> dict[Any, 
     beta = {value: 1 / len(hmm.hidden_domain) for value in hmm.hidden_domain}
 
     for i in range(len(observations) - 2, t - 1, -1):
-        print(i)
         beta = backward_step(hmm, beta, observations[i + 1])
 
     return beta
+
+
+def forward_backward(hmm: HiddenMarkovModel, observations: list, t: int=0) -> dict[Any, float]:
+    alpha = forward(hmm, observations, t)
+    beta = backward(hmm, observations, t)
+    
+    return normalize({value: alpha[value] * beta[value] for value in hmm.hidden_domain})
+
+
+def smoothing(hmm: HiddenMarkovModel, observations: list, t: int) -> dict[Any, float]:
+    return forward_backward(hmm, observations, t)
 
 
 if __name__ == "__main__":
     hmm = read_hmm_from_txt('hmm_ex.txt')
     # print(forward(hmm, [1, 0, 1, 0, 0], t=4))
     # print(filtering(hmm, [1, 0, 1, 0, 0]))
-    print(backward(hmm, [0, 1, 0], 0))
+    # print(backward(hmm, [0, 1, 0], 0))
+    print(smoothing(hmm, [0, 1, 0], 0))
