@@ -2,7 +2,7 @@ from hmm import HiddenMarkovModel, read_hmm_from_txt
 from typing import Any
 
 
-def normalize(probs: dict) -> dict:
+def normalize(probs: dict[Any, float]) -> dict[Any, float]:
     return {value: prob / sum(probs.values()) for value, prob in probs.items()}
 
 
