@@ -29,6 +29,8 @@
     {\begin{example}}
     {\hfill \qedsymbol \end{example}}
 
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+
 \renewcommand{\qedsymbol}{\(\blacksquare\)}
 \newcommand{\X}{\mathbf{X}}
 \renewcommand{\P}{\mathbb{P}}
@@ -36,6 +38,11 @@
 \setlength{\parskip}{2mm}
 
 \begin{document}
+
+\pagestyle{fancy}
+\fancyhead[L]{STA410}
+\fancyhead[C]{\nouppercase{\leftmark}}
+\fancyhead[R]{Johnny Meng}
 
 \begin{titlepage}
     \centering
