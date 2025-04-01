@@ -369,7 +369,7 @@ This method returns a list of the root vertices in the Bayesian Network. A root 
     __call__(self, *args) -> float
 \end{minted}
 
-This method evaluates the joint probability of the random variables in the Bayesian Network. The expected argument is a dictionary with the keys being the names of the random variables and the values being the corresponding values. The method outputs the joint probability of the random variables taking on those values. If values for one or more random variables are not provided, a \texttt{ValueError} will be raised. To compute the probability of a subset of the random variables, use the \textit{Variable Elimination} algorithm discussed in the next section.
+This method evaluates the joint probability of the random variables in the Bayesian Network. The expected argument is a dictionary with the keys being the names of the random variables and the values being the corresponding values. The method outputs the joint probability of the random variables taking on those values. If values for one or more random variables are not provided, a \texttt{ValueError} will be raised. To compute the probability of a subset of the random variables, use the \textit{Variable Elimination} algorithm discussed in \textit{Chapter \ref{sec:variable_elimination}}
 
 \subsubsection{\texttt{read\_bayes\_network\_from\_txt}}
 
@@ -451,11 +451,11 @@ To wrap up this section, below is an example of how to use the function to creat
 
 \pagebreak
 
-\section{Variable Elimination}
+\section{Variable Elimination} \label{sec:variable_elimination}
 
 \subsection{Motivation}
 
-In the previous section, we introduced how we could easily compute the joint probability of the random variables in a Bayesian Network. However, \textit{Definition \ref{def:bayesian_network}} must be used when the joint probability involves all random variables in the network and cannot be applied when we want to calculate the joint probability of a subset of the random variables or a conditional probability of the random variables. This motivates the use of the Variable Elimination algorithm.
+In the previous section, we introduced how we could easily compute the joint probability of the random variables in a Bayesian Network. However, \textit{Definition \ref{def:bayesian_network}} must be used when the joint probability involves all random variables in the network and cannot be applied when we want to calculate the joint probability of a subset of the random variables or a conditional probability of the random variables. This motivates the use of the \textit{Variable Elimination} algorithm.
 
 Below is the example Bayesian Network again for reference:
 \begin{figure}[htbp]
@@ -499,11 +499,11 @@ Some examples of probabilities we might want to compute are as follows:
     &\vdots
 \end{align*}
 
-With the Variable Elimination algorithm, these probabilities can be computed easily.
+With the \textit{Variable Elimination} algorithm, these probabilities can be computed easily.
 
 \subsection{Theory}
 
-The Variable Elimination algorithm is based on the following theorem:
+The \textit{Variable Elimination} algorithm is based on the following theorem:
 
 \begin{theoremqed} \label{thm:marginal}
     \textbf{(Marginal Probability)} Given discrete random variables \(X, Y\), the marginal probabilities can be computed as
@@ -515,7 +515,7 @@ The Variable Elimination algorithm is based on the following theorem:
     \end{align*}
 \end{theoremqed}
 
-With \textit{Theorem \ref{thm:marginal}}, the Variable Elimination algorithm is as follows:
+With \textit{Theorem \ref{thm:marginal}}, the \textit{Variable Elimination} algorithm is as follows:
 
 \begin{theoremqed} \label{thm:vea}
     \textbf{(Variable Elimination Algorithm)} Given a Bayesian Network with vertices \(\X = \{X_1, \cdots, X_n\}\) and a desired probability \(\P(Q | E)\) with \(Q \subseteq \X\), \(E \subseteq \X\), \(Q \cap E = \varnothing\), define \(H = \X \setminus Q \cup E\) as the hidden variables. Let \(D_X\) denote the domain of random variable \(X\). Then
@@ -523,7 +523,7 @@ With \textit{Theorem \ref{thm:marginal}}, the Variable Elimination algorithm is 
     where the notation \(\psi(X_h|E)\) denotes the ``factor'' that concerns the hidden variable \(X_h\) conditioned on \(E\), and \(\mathcal{F}\) defines the set of all the ``factors''.
 \end{theoremqed}
 
-\textit{Theorem \ref{thm:vea}} defines some new concepts such as \textit{hidden variables} and \textit{factors} that might be confusing, so I devote the following section to give an example of using the Variable Elimination algorithm to compute a probability.
+\textit{Theorem \ref{thm:vea}} defines some new concepts such as \textit{hidden variables} and \textit{factors} that might be confusing, so I devote the following section to give an example of using the \textit{Variable Elimination} algorithm to compute a probability.
 
 \subsection{Example}
 
@@ -591,7 +591,7 @@ Note that each factor is used only once and we can safely discard it afterwards.
 
 In our probability, \(A, E\) are the \textit{Query} variables because we are interested in their joint probabilities. \(D\) is the \textit{Evidence} variable because we have evidence of it. The remaining variables, \(B\) and \(C\), are \textit{Hidden} variables, and we will be removing them in this step.
 
-The computational complexity of the Variable Elimination algorithm is \(O(mk^{N_{\max}})\), where \(m\) is the number of initial factors, \(k\) is the maximum number of values in the domain of the variables, and \(N_{\max}\) is the number of variables inside the largest sum. However, this complexity largely depends on the order in which we eliminate the hidden variables, and finding the optimal order of elimination is \textsf{NP}-hard. For a small Bayesian Network like the one in our case, the order doesn't matter much, so I will predetermine the order to be \(B \to C\).
+The computational complexity of the \textit{Variable Elimination} algorithm is \(O(mk^{N_{\max}})\), where \(m\) is the number of initial factors, \(k\) is the maximum number of values in the domain of the variables, and \(N_{\max}\) is the number of variables inside the largest sum. However, this complexity largely depends on the order in which we eliminate the hidden variables, and finding the optimal order of elimination is \textsf{NP}-hard. For a small Bayesian Network like the one in our case, the order doesn't matter much, so I will predetermine the order to be \(B \to C\).
 
 To eliminate \(B\), we will gather all factors that concern the variable \(B\), in our case they are \(f_2\) and \(f_6\). We will consider every valid combination of the variables and multiply the probability values if the conditions match. After multiplying, we get
 \[f_7(A, B, C) = \begin{pmatrix}
@@ -654,7 +654,7 @@ We are almost done. We just need to normalize the remaining values so that they 
 
 \subsection{Implementation}
 
-The Variable Elimination algorithm is implemented in the \texttt{variable\_elimination.py} file. Each step mentioned above gets its own helper function, but the entire pipeline can be executed by calling the \texttt{variable\_elimination} function. This function has the following signature:
+The \textit{Variable Elimination} algorithm is implemented in the \texttt{variable\_elimination.py} file. Each step mentioned above gets its own helper function, but the entire pipeline can be executed by calling the \texttt{variable\_elimination} function. This function has the following signature:
 
 \begin{minted}{python}
     variable_elimination(bn: BayesNetwork, query: set, evidence: dict={}) -> dict
@@ -682,7 +682,7 @@ A Bayesian Network is nonetheless a model for a set of random variables, and thu
 \begin{exampleqed}
     Given the Bayesian Network in \textit{Figure \ref{fig:bayesian_network_probs}}, we can sample from it as follows:
     \begin{enumerate}
-        \item Sample the root node \(A\) as a Bernoulli random variable with \(\P(A)\);
+        \item Sample the root node \(A\) as a Bernoulli random variable with probability \(\P(A)\);
         \item Sample the next layer of nodes \(B\) and \(C\) conditioned on the sampled value of \(A\) using the conditional distributions \(\P(B|A)\) and \(\P(C|A)\);
         \item Sample the final layer of nodes \(D\) and \(E\) conditioned on the sampled values of \(B\) and \(C\) using the conditional distributions \(\P(D|B,C)\) and \(\P(E|C)\);
         \item The sampled values of \(A, B, C, D, E\) form a sample of the joint distribution of the random variables. Repeat this process to obtain more samples.
@@ -715,12 +715,117 @@ This function takes in a \texttt{BayesNetwork} instance and the number of sample
 
 \subsection{Introduction to HMM}
 
+A \textit{Hidden Markov Model}, or an HMM, is a special case of Bayesian Networks. An HMM has only two types of nodes: \textit{Hidden} nodes and \textit{Observation} nodes. In real-world applications, the hidden nodes represent states of a system that are not directly observable, while the observation nodes represent observable events that are generated by the hidden states. For \(t\in \{0, 1, \cdots\}\), let \(Z_t\) denote the hidden state at time \(t\) and \(X_t\) denote the observation at time \(t\). An HMM, as a Bayesian Network, has the following structure:
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}
+        \node[circle, draw, minimum size=1cm] (Z0) at (0,0) {\(Z_0\)};
+        \node[circle, draw, minimum size=1cm] (X0) at (0,-2) {\(X_0\)};
+        \node[circle, draw, minimum size=1cm] (Z1) at (3,0) {\(Z_1\)};
+        \node[circle, draw, minimum size=1cm] (X1) at (3,-2) {\(X_1\)};
+        \node[circle, draw, minimum size=1cm] (Z2) at (6,0) {\(Z_2\)};
+        \node[circle, draw, minimum size=1cm] (X2) at (6,-2) {\(X_2\)};
+        \node[circle, draw, minimum size=1cm] (Z3) at (9,0) {\(Z_3\)};
+        \node[circle, draw, minimum size=1cm] (X3) at (9,-2) {\(X_3\)};
+        \node[circle, draw, minimum size=1cm] (Z_inf) at (12,0) {\(\cdots\)};
+        \node[circle, draw, minimum size=1cm] (X_inf) at (12,-2) {\(\cdots\)};
+
+        \draw[->] (Z0) -- (Z1);
+        \draw[->] (Z1) -- (Z2);
+        \draw[->] (Z2) -- (Z3);
+        \draw[->] (Z3) -- (Z_inf);
+        \draw[->] (Z0) -- (X0);
+        \draw[->] (Z1) -- (X1);
+        \draw[->] (Z2) -- (X2);
+        \draw[->] (Z3) -- (X3);
+        \draw[->] (Z_inf) -- (X_inf);
+    \end{tikzpicture}
+    \caption{Hidden Markov Model Structure}
+    \label{fig:hmm_structure}
+\end{figure}
+
+Note that an HMM can have infinitely many nodes as \(t \to \infty\). At each time step \(t\), the hidden state \(Z_t\) generates an observation \(X_t\), modeled by the conditional dependence \(Z_t \longrightarrow X_t\). This implies that observation \(X_t\) only depends on the current hidden state \(Z_t\), which is an important property of HMMs. Additionally, note the conditional dependence \(Z_{t-1} \longrightarrow Z_t\), which implies that the hidden state at time \(t\) only depends on the hidden state at time \(t-1\), and not on other hidden or observation states.
+
+Given the HMM in \textit{Figure \ref{fig:hmm_structure}}, from previous sections we know that we can define different distributions for the hidden states and observation states. However, since the time step \(t\) can approach \(\infty\), defining the distributions for all hidden states and observation states separately is impractical. Therefore, we will make an assumption about our HMM here called \textit{stationarity}:
+
+\begin{definitionqed} \label{def:stationarity}
+    \textbf{(Stationarity of HMMs)} An HMM is \textit{stationary} if it satisfies the following conditions:
+    \begin{enumerate}
+        \item \(\P(Z_t | Z_{t-1})\) is the same for every time step \(t\);
+        \item \(\P(X_t | Z_t)\) is the same for every time step \(t\).
+    \end{enumerate}
+\end{definitionqed}
+
+With the assumption defined in \textit{Definition \ref{def:stationarity}}, we only need to define the following three sets of distributions for an HMM, which is much easier to do:
+
+\begin{enumerate}
+    \item \textbf{Initial Distribution} -- \(\pi(i) = \P(Z_0 = i)\). The probability that the initial hidden state is \(i\).
+    \item \textbf{Transition Distribution} -- \(\psi(i, j) = \P(Z_t = j | Z_{t-1} = i)\). The probability that the hidden state at time \(t\) is \(j\) given that the hidden state at time \(t-1\) is \(i\).
+    \item \textbf{Emission Distribution} -- \(\phi(i, k) = \P(X_t = k | Z_t = i)\). The probability that the observation at time \(t\) is \(k\) given that the hidden state at time \(t\) is \(i\).
+\end{enumerate}
+
+Similar to \textit{Figure \ref{fig:bayesian_network_probs}} where we defined some probabilities for illustration, we will define the following HMM and use these probabilities for subsequent examples:
+
 \pagebreak
 
-\section{The Viterbi Algorithm}
+\begin{exampleqed}
+    Let \(Z_t \in \{c, h\}\) denote whether the weather is \textit{cold} or \textit{hot} on day \(t\). Let \(X_t \in \{0, 1, 2\}\) denote the number of ice creams you eat on day \(t\). We define the following probability distributions:
+
+    \begin{figure}[htbp]
+        \centering
+        \begin{tikzpicture}
+            \node[circle, draw, minimum size=1cm] (Z0) at (0,0) {\(Z_0\)};
+            \node[circle, draw, minimum size=1cm] (X0) at (0,-2) {\(X_0\)};
+            \node[circle, draw, minimum size=1cm] (Z1) at (4,0) {\(Z_1\)};
+            \node[circle, draw, minimum size=1cm] (X1) at (4,-2) {\(X_1\)};
+            \node[circle, draw, minimum size=1cm] (Z2) at (8,0) {\(Z_2\)};
+            \node[circle, draw, minimum size=1cm] (X2) at (8,-2) {\(X_2\)};
+            \node[circle, draw, minimum size=1cm] (Z_inf) at (12,0) {\(\cdots\)};
+            \node[circle, draw, minimum size=1cm] (X_inf) at (12,-2) {\(\cdots\)};
+    
+            \node (P_Z0) at (0,1) {\(\P(Z_0 = c) = 0.2\)};
+            \node (P_Z_c) at (6, 1.5) {\(\P(Z_t = c | Z_{t-1} = c) = 0.7\)};
+            \node (P_Z_h) at (6, 1) {\(\P(Z_t = c | Z_{t-1} = h) = 0.1\)};
+            \node (P_X0_c) at (6, -3) {\(\P(X_t = 0 | Z_t = c) = 0.8\)};
+            \node (P_X1_c) at (6, -3.5) {\(\P(X_t = 1 | Z_t = c) = 0.15\)};
+            \node (P_X0_h) at (6, -4) {\(\P(X_t = 0 | Z_t = h) = 0.1\)};
+            \node (P_X1_h) at (6, -4.5) {\(\P(X_t = 1 | Z_t = h) = 0.3\)};
+    
+            \draw[->] (Z0) -- (Z1);
+            \draw[->] (Z1) -- (Z2);
+            \draw[->] (Z2) -- (Z_inf);
+            \draw[->] (Z0) -- (X0);
+            \draw[->] (Z1) -- (X1);
+            \draw[->] (Z2) -- (X2);
+            \draw[->] (Z_inf) -- (X_inf);
+        \end{tikzpicture}
+        \caption{HMM with Probabilities Example}
+        \label{fig:hmm_probs}
+    \end{figure}
+\end{exampleqed}
+
+Besides computing the joint probabilities using \textit{Definition \ref{def:bayesian_network}} or the \hyperref[sec:variable_elimination]{\textit{Variable Elimination}} algorithm on an HMM, given a sequence of observations \(\vec x = [x_0, x_1, \cdots, x_T]\), there are 4 common types of tasks that we can perform with an HMM:
+
+\begin{enumerate}
+    \item \textbf{Filtering} -- \(\P(Z_T | \vec x)\). Compute the probability of the hidden state at \textit{current} time \(T\) based on all observations. This can be done using the \textit{Forward} algorithm discussed in \textit{Chapter \ref{sec:forward_algorithm}};
+    \item \textbf{Smoothing} -- \(\P(Z_t | \vec x)\) for \(0 \leq t < T\). Compute the probability of the hidden state at \textit{past} time \(t\) based on all observations. This can be done using the \textit{Forward-Backward} algorithm discussed in \textit{Chapter \ref{sec:forward_backward_algorithm}};
+    \item \textbf{Prediction} -- \(\P(Z_t | \vec x)\) for \(t > T\). Compute the probability of the hidden state at \textit{future} time \(t\) based on all observations. This is not implemented in this project;
+    \item \textbf{Most Likely Sequence} -- \(\arg \max_{\vec z} \P(\vec z | \vec x)\). Compute the most likely sequence of hidden states given the observations. This can be done using the \textit{Viterbi} algorithm discussed in \textit{Chapter \ref{sec:viterbi_algorithm}}.
+\end{enumerate}
+
+\subsection{Implementation}
+
+\pagebreak
+
+\section{The Viterbi Algorithm} \label{sec:viterbi_algorithm}
 
 \pagebreak
 
 \section{The Forward-Backward Algorithm}
+
+\subsection{The Forward Algorithm} \label{sec:forward_algorithm}
+
+\subsection{The Forward-Backward Algorithm} \label{sec:forward_backward_algorithm}
 
 \end{document}
