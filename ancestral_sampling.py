@@ -1,4 +1,4 @@
-from bayes_network import BayesNetwork
+from bayes_network import BayesNetwork, read_bayes_network_from_txt
 from typing import Any, Union
 from distribution import *
 import random
@@ -54,4 +54,7 @@ def ancestral_sampling(bn: BayesNetwork, n: int=1) -> Union[dict[str, Any], list
 
 
 if __name__ == '__main__':
-    pass
+    random.seed(410)
+    bn = read_bayes_network_from_txt('bn_ex.txt')
+    print(ancestral_sampling(bn))
+    print(ancestral_sampling(bn, 5))
