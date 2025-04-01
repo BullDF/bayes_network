@@ -810,7 +810,7 @@ Besides computing the joint probabilities using \textit{Definition \ref{def:baye
 \begin{enumerate}
     \item \textbf{Filtering} -- \(\P(Z_T | \vec x)\). Compute the probability of the hidden state at \textit{current} time \(T\) based on all observations. This can be done using the \textit{Forward} algorithm discussed in \textit{Chapter \ref{sec:forward_algorithm}};
     \item \textbf{Smoothing} -- \(\P(Z_t | \vec x)\) for \(0 \leq t < T\). Compute the probability of the hidden state at \textit{past} time \(t\) based on all observations. This can be done using the \textit{Forward-Backward} algorithm discussed in \textit{Chapter \ref{sec:forward_backward_algorithm}};
-    \item \textbf{Prediction} -- \(\P(Z_t | \vec x)\) for \(t > T\). Compute the probability of the hidden state at \textit{future} time \(t\) based on all observations. This is not implemented in this project;
+    \item \textbf{Prediction} -- \(\P(Z_t | \vec x)\) for \(t > T\). Compute the probability of the hidden state at \textit{future} time \(t\) based on all observations. This is currently not implemented;
     \item \textbf{Most Likely Sequence} -- \(\arg \max_{\vec z} \P(\vec z | \vec x)\). Compute the most likely sequence of hidden states given the observations. This can be done using the \textit{Viterbi} algorithm discussed in \textit{Chapter \ref{sec:viterbi_algorithm}}.
 \end{enumerate}
 
