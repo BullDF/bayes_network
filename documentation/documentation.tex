@@ -451,10 +451,6 @@ To wrap up this section, below is an example of how to use the function to creat
 
 \pagebreak
 
-\section{Ancestral Sampling}
-
-\pagebreak
-
 \section{Variable Elimination}
 
 \subsection{Motivation}
@@ -679,7 +675,45 @@ which match our manual calculations above.
 
 \pagebreak
 
-\section{Hidden Markov Model}
+\section{Ancestral Sampling}
+
+A Bayesian Network is nonetheless a model for a set of random variables, and thus we can sample from it. One way to sample from a Bayesian Network is \textit{Ancestral Sampling}. The joint probability formula for a Bayesian Network defined in \textit{Definition \ref{def:bayesian_network}} suggests that we can sample each random variable based on the conditional distribution given its parents in a topological order, which also gives birth to the name \textit{Ancestral Sampling}.
+
+\begin{exampleqed}
+    Given the Bayesian Network in \textit{Figure \ref{fig:bayesian_network_probs}}, we can sample from it as follows:
+    \begin{enumerate}
+        \item Sample the root node \(A\) as a Bernoulli random variable with \(\P(A)\);
+        \item Sample the next layer of nodes \(B\) and \(C\) conditioned on the sampled value of \(A\) using the conditional distributions \(\P(B|A)\) and \(\P(C|A)\);
+        \item Sample the final layer of nodes \(D\) and \(E\) conditioned on the sampled values of \(B\) and \(C\) using the conditional distributions \(\P(D|B,C)\) and \(\P(E|C)\);
+        \item The sampled values of \(A, B, C, D, E\) form a sample of the joint distribution of the random variables. Repeat this process to obtain more samples.
+    \end{enumerate}
+\end{exampleqed}
+
+This method is implemented in the \texttt{ancestral\_sampling.py} file. The function has the following signature:
+
+\begin{minted}{python}
+    ancestral_sampling(bn: BayesNetwork, n: int=1) -> Union[dict, list[dict]]:
+\end{minted}
+
+This function takes in a \texttt{BayesNetwork} instance and the number of samples \(n\), whose default value is 1. The function returns a dictionary containing the sampled values of the random variables. If \(n > 1\), the function returns a list of dictionaries, each representing a sample. Below is an example usage of the function:
+
+\begin{minted}{python}
+    >>> bn = read_bayes_network_from_txt('bn_ex.txt')
+    >>> ancestral_sampling(bn)
+    {'A': 1, 'B': 0, 'C': 1, 'D': 1, 'E': 0}
+    >>> ancestral_sampling(bn, n=5)
+    [{'A': 0, 'B': 0, 'C': 1, 'D': 1, 'E': 1},
+     {'A': 0, 'B': 0, 'C': 0, 'D': 1, 'E': 1},
+     {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0},
+     {'A': 1, 'B': 1, 'C': 0, 'D': 1, 'E': 0},
+     {'A': 0, 'B': 0, 'C': 1, 'D': 0, 'E': 1}]
+\end{minted}
+
+\pagebreak
+
+\section{Hidden Markov Model (HMM)}
+
+\subsection{Introduction to HMM}
 
 \pagebreak
 
