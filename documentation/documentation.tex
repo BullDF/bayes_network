@@ -699,7 +699,7 @@ A Bayesian Network is nonetheless a model for a set of random variables, and thu
 This method is implemented in the \texttt{ancestral\_sampling.py} file. The function has the following signature:
 
 \begin{minted}{python}
-    ancestral_sampling(bn: BayesNetwork, n: int=1) -> Union[dict, list[dict]]:
+    ancestral_sampling(bn: BayesNetwork, n: int=1) -> Union[dict, list[dict]]
 \end{minted}
 
 This function takes in a \texttt{BayesNetwork} instance and the number of samples \(n\), whose default value is 1. The function returns a dictionary containing the sampled values of the random variables. If \(n > 1\), the function returns a list of dictionaries, each representing a sample. Below is an example usage of the function:
