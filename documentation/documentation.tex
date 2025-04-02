@@ -171,7 +171,7 @@ Note that \textit{Definition \ref{def:bayesian_network}} is a special case of \t
 
 Note that only 11 conditional probabilities are needed to specify the joint distribution of the 5 random variables in our Bayesian Network, which is a significant improvement compared to the \(2^5 - 1 = 31\) joint probabilities in the general case. The exact number of required conditional probabilities depends on the structure of the Bayesian Network, though, but as long as there are some conditional independence relationships between the random variables, we can always expect a reduction in the number of required conditional probabilities.
 
-\subsection{Implementation}
+\subsection{Implementation} \label{sec:bn_implementation}
 
 The implementation of Bayesian Network in this project consists of multiple modules which are discussed separately in the following subsections.
 
@@ -443,7 +443,7 @@ To wrap up this section, below is an example of how to use the function to creat
     Regarding joint probability computations:
     \begin{align*}
         \P(A=1, B=0, C=1, D=1, E=0) &= \P(A=1)\P(B=0|A=1)\P(C=1|A=1)\P(D=1|B=0,C=1) \\
-        &\cdot \P(E=0|C=1) \\
+        &\quad \cdot \P(E=0|C=1) \\
         &= 0.5 \cdot 0.2 \cdot 0.7 \cdot 0.4 \cdot 0.5 \\
         &= 0.014.
     \end{align*}
@@ -493,7 +493,7 @@ Below is the example Bayesian Network again for reference:
         \draw[->] (C) -- (E);
     \end{tikzpicture}
     \caption{Bayesian Network with Probabilities Example}
-    \label{fig:bayesian_network_probs_ch3}
+    \label{fig:bayesian_network_probs_vea}
 \end{figure}
 
 Some examples of probabilities we might want to compute are as follows:
@@ -534,12 +534,12 @@ With \textit{Theorem \ref{thm:marginal}}, the \textit{Variable Elimination} algo
 
 \subsection{Example}
 
-Given Bayesian Network \textit{Figure \ref{fig:bayesian_network_probs_ch3}}, suppose we want to compute conditional probability
+Given Bayesian Network \textit{Figure \ref{fig:bayesian_network_probs_vea}}, suppose we want to compute conditional probability
 \[\P(A, E | D = 0).\]
 
 \subsubsection{Step I -- Creating Initial Factors}
 
-For each node in the Bayesian Network, we create a factor consisting of its probabilities defined by the network. Each factor has a scope denoting the set of random variables it concerns. For the Bayesian Network in \textit{Figure \ref{fig:bayesian_network_probs_ch3}}, we would create the following initial factors:
+For each node in the Bayesian Network, we create a factor consisting of its probabilities defined by the network. Each factor has a scope denoting the set of random variables it concerns. For the Bayesian Network in \textit{Figure \ref{fig:bayesian_network_probs_vea}}, we would create the following initial factors:
 \begin{align*}
     f_1(A) &= \begin{pmatrix}
         A = 1 & 0.5 \\
@@ -766,11 +766,14 @@ Given the HMM in \textit{Figure \ref{fig:hmm_structure}}, from previous sections
 
 With the assumption defined in \textit{Definition \ref{def:stationarity}}, we only need to define the following three sets of distributions for an HMM, which is much easier to do:
 
-\begin{enumerate}
-    \item \textbf{Initial Distribution} -- \(\pi(i) = \P(Z_0 = i)\). The probability that the initial hidden state is \(i\).
-    \item \textbf{Transition Distribution} -- \(\psi(i, j) = \P(Z_t = j | Z_{t-1} = i)\). The probability that the hidden state at time \(t\) is \(j\) given that the hidden state at time \(t-1\) is \(i\).
-    \item \textbf{Emission Distribution} -- \(\phi(i, k) = \P(X_t = k | Z_t = i)\). The probability that the observation at time \(t\) is \(k\) given that the hidden state at time \(t\) is \(i\).
-\end{enumerate}
+\begin{definitionqed} \label{def:hmm}
+    A stationary HMM is specified by the following distributions:
+    \begin{enumerate}
+        \item \textbf{Initial Distribution} -- \(\pi(i) = \P(Z_0 = i)\). The probability that the initial hidden state is \(i\).
+        \item \textbf{Transition Distribution} -- \(\psi(i, j) = \P(Z_t = j | Z_{t-1} = i)\). The probability that the hidden state at time \(t\) is \(j\) given that the hidden state at time \(t-1\) is \(i\).
+        \item \textbf{Emission Distribution} -- \(\phi(i, k) = \P(X_t = k | Z_t = i)\). The probability that the observation at time \(t\) is \(k\) given that the hidden state at time \(t\) is \(i\).
+    \end{enumerate}
+\end{definitionqed}
 
 Similar to \textit{Figure \ref{fig:bayesian_network_probs}} where we defined some probabilities for illustration, we will define the following HMM and use these probabilities for subsequent examples:
 
@@ -823,9 +826,282 @@ Besides computing the joint probabilities using \textit{Definition \ref{def:baye
 
 \subsection{Implementation}
 
+\subsubsection{\texttt{HiddenMarkovModel}}
+
+The \texttt{HiddenMarkovModel} class is implemented in the \texttt{hmm.py} file. This class extends the \texttt{BayesNetwork} class discussed in \textit{Chapter \ref{sec:bn_implementation}}, because an HMM is essentially a special type of Bayesian Network. The class has the following attributes:
+
+\begin{minted}{python}
+    time_step: Optional[int]
+\end{minted}
+
+This attribute stores the number of time steps for the HMM.
+
+\begin{minted}{python}
+    hidden_domain: Optional[set]
+    observation_domain: Optional[set]
+\end{minted}
+
+These two attributes store the domains of the hidden and observation variables, respectively.
+
+\begin{minted}{python}
+    initial_distribution: Optional[UnconditionalDistribution]
+    transition_distribution: Optional[ConditionalDistribution]
+    emission_distribution: Optional[ConditionalDistribution]
+\end{minted}
+
+These three attributes define the distributions of the HMM as specified in \textit{Definition \ref{def:hmm}}.
+
+In addition to the methods implemented in \texttt{BayesNetwork} as documented in \textit{Chapter \ref{sec:bn_implementation}}, this class implements the following methods:
+
+\begin{minted}{python}
+    __init__(self) -> None
+\end{minted}
+
+This constructor initializes a \texttt{HiddenMarkovModel} instance. It takes no arguments and initializes all the attributes to \texttt{None}.
+
+\begin{minted}{python}
+    set_time_step(self, time_step: int) -> None
+    set_hidden_domain(self, hidden_domain: set) -> None
+    set_observation_domain(self, observation_domain: set) -> None
+    set_initial_distribution(self, initial_distribution: UnconditionalDistribution) -> None
+    set_transition_distribution(self, transition_distribution: ConditionalDistribution) -> None
+    set_emission_distribution(self, emission_distribution: ConditionalDistribution) -> None
+\end{minted}
+
+These methods basically set the corresponding attributes of the \texttt{HiddenMarkovModel} instance.
+
+\subsubsection{\texttt{read\_hmm\_from\_txt}}
+
+Similar to \texttt{BayesNetwork}, initializing a \texttt{HiddenMarkovModel} instance from scratch is cumbersome. Therefore, a helper function named \texttt{read\_hmm\_from\_txt} is provided. The example file for the HMM specified in \textit{Figure \ref{fig:hmm_probs}} is in this \href{https://github.com/BullDF/bayes_network/blob/main/hmm_ex.txt}{\texttt{hmm\_ex.txt}} file. This file has 5 parts:
+
+\begin{verbatim}
+    X: {0, 1, 2}
+    Z: {c, h}
+\end{verbatim}
+
+This part specifies the domains of the observation and hidden variables, respectively.
+
+\begin{verbatim}
+    T = 2
+\end{verbatim}
+
+This part specifies the number of time steps for the HMM.
+
+\begin{verbatim}
+    P(Z = c) = 0.2
+    P(Z = h) = 0.8
+\end{verbatim}
+
+This part specifies the initial distribution of the HMM.
+
+\begin{verbatim}
+    P(Z = c | Z = c) = 0.7
+    P(Z = h | Z = c) = 0.3
+    P(Z = c | Z = h) = 0.1
+    P(Z = h | Z = h) = 0.9
+\end{verbatim}
+
+This part specifies the transition distribution of the HMM.
+
+\begin{verbatim}
+    P(X = 0 | Z = c) = 0.8
+    P(X = 1 | Z = c) = 0.15
+    P(X = 2 | Z = c) = 0.05
+    P(X = 0 | Z = h) = 0.1
+    P(X = 1 | Z = h) = 0.3
+    P(X = 2 | Z = h) = 0.6
+\end{verbatim}
+
+This part specifies the emission distribution of the HMM.
+
+Note that it is important to follow the exact format above as the function uses regular expressions to parse the file. Given this function, we can initialize and work with an HMM in the following manner:
+
+\begin{exampleqed}
+    Assume that the text file is named \texttt{hmm\_ex.txt} and is in the same directory as the Python file.
+
+    \begin{minted}{python}
+        >>> hmm = read_hmm_from_txt('hmm_ex.txt')
+        >>> hmm.find_roots()
+        [Z0: {'h', 'c'}]
+        >>> hmm.time_step
+        2
+        >>> hmm.hidden_domain
+        {'h', 'c'}
+        >>> hmm.observation_domain
+        {0, 1, 2}
+        >>> len(hmm)
+        6 # 3 hidden states and 3 observation states
+    \end{minted}
+
+    Regarding joint probability computations:
+    \begin{align*}
+        \P(Z_0 = c, Z_1 = h, Z_2 = h, X_0 = 0, X_1 = 1, X_2 = 2) &= \P(Z_0 = c) \cdot \P(Z_1 = h | Z_0 = c) \cdot \P(Z_2 = h | Z_1 = h) \\
+        &\quad \cdot \P(X_0 = 0 | Z_0 = c) \cdot \P(X_1 = 1 | Z_1 = h) \cdot \P(X_2 = 2 | Z_2 = h) \\
+        &= 0.2 \cdot 0.3 \cdot 0.9 \cdot 0.8 \cdot 0.3 \cdot 0.6 \\
+        &= 0.007776
+    \end{align*}
+
+    The code output confirms this result:
+    \begin{minted}{python}
+        >>> hmm({'Z0': 'c', 'X0': 0, 'Z1': 'h', 'X1': 1, 'Z2': 'h', 'X2': 2})
+        0.007776
+    \end{minted}
+\end{exampleqed}
+
 \pagebreak
 
 \section{The Viterbi Algorithm} \label{sec:viterbi_algorithm}
+
+\subsection{Motivation}
+
+Suppose we have logged the number of ice creams we have eaten through out the summer in our diary, and later we want to recall what the weather was like on each day of the summer. Since we have no recorded information on the weather, our only hope is to recover the weather information based on the numbers of ice creams we have eaten. This motivates the \textit{Viterbi} algorithm, which computes the most likely sequence of hidden states based on a given sequence of observations.
+
+The \textit{Viterbi} algorithm uses dynamic programming in a way that future states are computed based on past states. We will illustrate this process in the following section. Below is the example HMM again for reference.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}
+        \node[circle, draw, minimum size=1cm] (Z0) at (0,0) {\(Z_0\)};
+        \node[circle, draw, minimum size=1cm] (X0) at (0,-2) {\(X_0\)};
+        \node[circle, draw, minimum size=1cm] (Z1) at (4,0) {\(Z_1\)};
+        \node[circle, draw, minimum size=1cm] (X1) at (4,-2) {\(X_1\)};
+        \node[circle, draw, minimum size=1cm] (Z2) at (8,0) {\(Z_2\)};
+        \node[circle, draw, minimum size=1cm] (X2) at (8,-2) {\(X_2\)};
+        \node[circle, draw, minimum size=1cm] (Z_inf) at (12,0) {\(\cdots\)};
+        \node[circle, draw, minimum size=1cm] (X_inf) at (12,-2) {\(\cdots\)};
+
+        \node (P_Z0) at (0,1) {\(\P(Z_0 = c) = 0.2\)};
+        \node (P_Z_c) at (6, 1.5) {\(\P(Z_t = c | Z_{t-1} = c) = 0.7\)};
+        \node (P_Z_h) at (6, 1) {\(\P(Z_t = c | Z_{t-1} = h) = 0.1\)};
+        \node (P_X0_c) at (6, -3) {\(\P(X_t = 0 | Z_t = c) = 0.8\)};
+        \node (P_X1_c) at (6, -3.5) {\(\P(X_t = 1 | Z_t = c) = 0.15\)};
+        \node (P_X0_h) at (6, -4) {\(\P(X_t = 0 | Z_t = h) = 0.1\)};
+        \node (P_X1_h) at (6, -4.5) {\(\P(X_t = 1 | Z_t = h) = 0.3\)};
+
+        \draw[->] (Z0) -- (Z1);
+        \draw[->] (Z1) -- (Z2);
+        \draw[->] (Z2) -- (Z_inf);
+        \draw[->] (Z0) -- (X0);
+        \draw[->] (Z1) -- (X1);
+        \draw[->] (Z2) -- (X2);
+        \draw[->] (Z_inf) -- (X_inf);
+    \end{tikzpicture}
+    \caption{HMM with Probabilities Example}
+    \label{fig:hmm_probs_viterbi}
+\end{figure}
+
+\subsection{Example} \label{sec:viterbi_example}
+
+Suppose on a 4-day interval, we have eaten the following numbers of ice creams:
+
+\begin{verbatim}
+    X = [0, 1, 2, 1]
+\end{verbatim}
+
+We will consider the numbers sequentially. 
+
+\subsubsection{Day 0}
+
+On day 0, the number of ice cream we have eaten is 0, and we would like to compute the most likely hidden state on day 0. This motivates the use of \textit{Bayes' Rule}:
+\begin{align*}
+    z_0 &= \arg \max_z \P(Z_0 = z | X_0 = 0) \\
+    &= \arg \max_z \frac{\P(X_0 = 0|Z_0 = z) \P(Z_0 = z)}{\P(X_0 = 0)} \\
+    &= \arg \max_z \P(X_0 = 0|Z_0 = z) \P(Z_0 = z).
+\end{align*}
+
+This separates into 2 cases:
+\[\P(X_0=0 | Z_0 = c) \P(Z_0 = c) = 0.8 \cdot 0.2 = 0.16; \hspace{2cm} \P(X_0=0 | Z_0 = h) \P(Z_0 = h) = 0.1 \cdot 0.8 = 0.08.\]
+Therefore, it is more likely that \(z_0 = c\) than \(z_0 = h\).
+
+\subsubsection{Day 1}
+
+On day 1, we have eaten 1 ice cream. Note that the probability of interest at this time step is the following, given the conditional independence relationships in the HMM:
+\begin{align*}
+    \P(Z_0, Z_1 | X_0 = 0, X_1 = 1) &= \frac{\P(X_0 = 0, X_1 = 1, Z_0, Z_1)}{\P(X_0 = 0, X_1 = 1)} \\
+    &\propto \P(X_0 = 0, X_1 = 1, Z_0, Z_1) \\
+    &= \P(Z_1, X_0 = 0, X_1 = 1 | Z_0) \P(Z_0) \\
+    &= \P(Z_0) \P(X_0 = 0, X_1 = 0 | Z_0, Z_1) \P(Z_1 | Z_0) \\
+    &= \P(Z_0)\P(X_0 = 0 | Z_0) \P(Z_1|Z_0)  \P(X_1 = 1 | Z_1).
+\end{align*}
+
+In the last line of the above equation, note that the first two terms come from the previous time step \(t = 0\), the third term is the transition probability, and the last term is the emission probability. Since the first two terms do not contain \(Z_1\), we should always choose the most likely hidden state from the previous time step, suggesting a dynamic programming approach. With \(Z_0 = c\), we can compute day 1 as follows:
+\begin{align*}
+    \P(z_0, Z_1 = c | X_0 = 0, X_1 = 1) &\propto \P(z_0)\P(X_0 = 0 | z_0)\P(Z_1 = c | z_0) \P(X_1 = 1 | Z_1 = c) \\
+    &= 0.16 \cdot 0.7 \cdot 0.15 \\
+    &= 0.0168; \\
+    \P(z_0, Z_1 = c | X_0 = 0, X_1 = 1) &\propto \P(z_0)\P(X_0 = 0 | z_0)\P(Z_1 = h | z_0) \P(X_1 = 1 | Z_1 = h) \\
+    &= 0.16 \cdot 0.3 \cdot 0.3 \\
+    &= 0.0144.
+\end{align*}
+Therefore, it is more likely that \(z_1 = c\) than \(z_1 = h\).
+
+\subsubsection{Day 2}
+
+We will use the same technique to compute the probability of day 2:
+\begin{align*}
+    \P(z_0, z_1, Z_2 = c | X_0 = 0, X_1 = 1, X_2 = 2) &\propto \P(z_0, z_1|x_0, x_1) \P(Z_2 = c |z_1) \P(x_2 | Z_2 = c) \\
+    &= 0.0168 \cdot 0.7 \cdot 0.05 \\
+    &= 0.000588; \\
+    \P(z_0, z_1, Z_2 = h | X_0 = 0, X_1 = 1, X_2 = 2) &\propto \P(z_0, z_1|x_0, x_1) \P(Z_2 = h |z_1) \P(x_2 | Z_2 = h) \\
+    &= 0.0168 \cdot 0.3 \cdot 0.6 \\
+    &= 0.003024.
+\end{align*}
+Therefore, it is more likely that \(z_2 = h\) than \(z_2 = c\).
+
+\subsubsection{Day 3}
+
+We will use the same technique to compute the probability of day 3:
+\begin{align*}
+    \P(z_0, z_1, z_2, Z_3 = c | X_0 = 0, X_1 = 1, X_2 = 2, X_3 = 1) &\propto \P(z_0, z_1, z_2|x_0, x_1, x_2) \P(Z_3 = c |z_2) \P(x_3 | Z_3 = c) \\
+    &= 0.003024 \cdot 0.1 \cdot 0.15 \\
+    &= 0.00004536; \\
+    \P(z_0, z_1, z_2, Z_3 = h | X_0 = 0, X_1 = 1, X_2 = 2, X_3 = 1) &\propto \P(z_0, z_1, z_2|x_0, x_1, x_2) \P(Z_3 = h |z_2) \P(x_3 | Z_3 = h) \\
+    &= 0.003024 \cdot 0.9 \cdot 0.3 \\
+    &= 0.00081648.
+\end{align*}
+Therefore, it is more likely that \(z_3 = h\) than \(z_3 = c\).
+
+\subsubsection{Conclusion}
+
+Overall, given the observations
+
+\begin{verbatim}
+    X = [0, 1, 2, 1]
+\end{verbatim}
+
+the most likely sequence of hidden states computed using the \textit{Viterbi} algorithm is
+
+\begin{verbatim}
+    Z = [c, c, h, h]
+\end{verbatim}
+
+\subsection{Implementation}
+
+The \textit{Viterbi} algorithm is implemented in the \texttt{viterbi.py} file. The algorithm is split into two parts: \texttt{viterbi\_base} and \texttt{viterbi\_step}. The main function \texttt{viterbi} uses the split functions to execute the algorithm and compute the most likely sequence of hidden states. The main function has the following signature:
+
+\begin{minted}{python}
+    viterbi(hmm: HiddenMarkovModel, observations: list) -> list
+\end{minted}
+
+Running code for the example illustrated above, we would get the outputs
+
+\begin{minted}{python}
+    >>> hmm = read_hmm_from_txt('hmm_ex.txt')
+    >>> viterbi(hmm, [0, 1, 2, 1])
+    ['c', 'c', 'h', 'h']
+\end{minted}
+
+which match our manual calculations above.
+
+\subsection{Notes}
+
+\subsubsection{Normalization}
+
+From our manual calculations above in \textit{Chapter \ref{sec:viterbi_example}}, we notice that the computed probabilities got exponentially smaller as the number of time steps increased. This quickly leads to numerical stability and underflow issues. To prevent this, the Python implementation normalizes the returned probabilities at each time step so that the probabilities stay at a manageable level.
+
+\subsubsection{\texttt{HiddenMarkovModel.time\_step}}
+
+Note that the \texttt{HiddenMarkovModel} has an attribute called \texttt{time\_step} that is supposed to specify the number of states in the HMM. This attribute only matters when computing the joint probabilities of the variables in the HMM using the \texttt{\_\_call\_\_} method or the \textit{Variable Elimination} algorithm. The \textit{Viterbi} algorithm only uses the \texttt{initial\_distribution}, \texttt{transition\_distribution}, and \texttt{emission\_distribution} attributes of the HMM, and thus the \texttt{viterbi} function described above can compute the most likely sequence of hidden states of any length under the given HMM setup. The length of the returned sequence is solely determined by the length of the input observations.
 
 \pagebreak
 
