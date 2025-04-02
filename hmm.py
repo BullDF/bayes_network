@@ -146,8 +146,10 @@ def read_hmm_from_txt(file_name: str) -> HiddenMarkovModel:
         
 
 if __name__ == "__main__":
-    hmm = read_hmm_from_txt('hmm.txt')
-    # print(hmm({'Z0': 1, 'X0': 0, 'Z1': 0, 'X1': 1, 'Z2': 0, 'X2': 1}))
-    print(hmm.initial_distribution)
-    # print(hmm.hidden_distribution)
-    # print(hmm.emission_distribution)
+    hmm = read_hmm_from_txt('hmm_ex.txt')
+    print(hmm.find_roots())
+    print(hmm.time_step)
+    print(hmm.hidden_domain)
+    print(hmm.observation_domain)
+    print(len(hmm))
+    print(hmm({'Z0': 'c', 'X0': 0, 'Z1': 'h', 'X1': 1, 'Z2': 'h', 'X2': 2}))
