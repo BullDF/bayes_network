@@ -1,7 +1,7 @@
-from bayes_network import BayesNetwork, read_bayes_network_from_txt
 from typing import Any
-from distribution import *
-from hmm import read_hmm_from_txt
+
+from .bayes_network import BayesNetwork, read_bayes_network_from_txt
+from .distribution import *
 
 
 class Factor:

@@ -1,5 +1,6 @@
 from typing import Any, Sequence
 
+
 def str_to_value(value: str) -> Any:
     if value.isdecimal() or value in {'True', 'False'}:
         return eval(value)

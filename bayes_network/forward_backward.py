@@ -1,6 +1,7 @@
-from hmm import HiddenMarkovModel, read_hmm_from_txt
 from typing import Any
-from variable_elimination import variable_elimination
+
+from .hmm import HiddenMarkovModel, read_hmm_from_txt
+from .variable_elimination import variable_elimination
 
 
 def normalize(probs: dict[Any, float]) -> dict[Any, float]:

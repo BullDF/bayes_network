@@ -1,6 +1,8 @@
 from typing import Self, Any, Optional
-from distribution import *
-from utils import str_to_value
+
+from .distribution import *
+from .utils import str_to_value
+
 
 class Vertex:
     name: str

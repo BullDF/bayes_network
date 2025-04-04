@@ -1,10 +1,11 @@
-from bayes_network import BayesNetwork
-from distribution import *
 from typing import Optional
-from vertex import Vertex
-from utils import *
 import re
 from collections import defaultdict
+
+from .bayes_network import BayesNetwork
+from .distribution import *
+from .vertex import Vertex
+from .utils import *
 
 
 class HiddenMarkovModel(BayesNetwork):

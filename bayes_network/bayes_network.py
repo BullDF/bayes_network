@@ -1,8 +1,9 @@
-from vertex import Vertex
 import re
-from utils import strs_to_domain, str_to_value
 from collections import defaultdict
-from distribution import UnconditionalDistribution, ConditionalDistribution
+
+from .vertex import Vertex
+from .utils import strs_to_domain, str_to_value
+from .distribution import UnconditionalDistribution, ConditionalDistribution
 
 
 class BayesNetwork:

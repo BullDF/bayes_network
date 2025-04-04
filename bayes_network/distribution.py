@@ -1,6 +1,7 @@
 from typing import Any
 from abc import ABC, abstractmethod
-from utils import dict_to_frozenset
+
+from .utils import dict_to_frozenset
 
 
 class Distribution(ABC):

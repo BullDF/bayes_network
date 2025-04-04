@@ -1,9 +1,10 @@
-from bayes_network import BayesNetwork, read_bayes_network_from_txt
 from typing import Any, Union
-from distribution import *
 import random
-from utils import dict_to_frozenset
 from collections import deque
+
+from .bayes_network import BayesNetwork, read_bayes_network_from_txt
+from .utils import dict_to_frozenset
+from .distribution import *
 
 
 def ancestral_sampling(bn: BayesNetwork, n: int=1) -> Union[dict[str, Any], list[dict[str, Any]]]:
