@@ -155,5 +155,5 @@ def variable_elimination(bn: BayesNetwork, query: set[str], evidence: dict[str, 
 
 
 if __name__ == '__main__':
-    bn = read_bayes_network_from_txt('bn_ex.txt')
+    bn = read_bayes_network_from_txt('../bn_ex.txt')
     print(variable_elimination(bn, {'A', 'E'}, {'D': 0}))

@@ -103,7 +103,7 @@ def smoothing(hmm: HiddenMarkovModel, observations: list, t: int) -> dict[Any, f
 
 
 if __name__ == "__main__":
-    hmm = read_hmm_from_txt('hmm_ex_t7.txt')
+    hmm = read_hmm_from_txt('../hmm_ex_t7.txt')
     print(filtering(hmm, [0, 1, 2, 1, 1, 2, 0]))
     print(smoothing(hmm, [0, 1, 2, 1, 1, 2, 0], 2))
     print(smoothing(hmm, [0, 1, 2, 1, 1, 2, 0], 5))

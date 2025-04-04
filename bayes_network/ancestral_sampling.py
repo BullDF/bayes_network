@@ -55,6 +55,6 @@ def ancestral_sampling(bn: BayesNetwork, n: int=1) -> Union[dict[str, Any], list
 
 if __name__ == '__main__':
     random.seed(410)
-    bn = read_bayes_network_from_txt('bn_ex.txt')
+    bn = read_bayes_network_from_txt('../bn_ex.txt')
     print(ancestral_sampling(bn))
     print(ancestral_sampling(bn, 5))

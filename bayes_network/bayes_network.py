@@ -126,7 +126,7 @@ def read_bayes_network_from_txt(file_name: str) -> BayesNetwork:
 
 
 if __name__ == '__main__':
-    bn = read_bayes_network_from_txt('bn_ex.txt')
+    bn = read_bayes_network_from_txt('../bn_ex.txt')
     print(bn.find_roots())
     print(len(bn))
     print(bn({'A': 1, 'B': 0, 'C': 1, 'D': 1, 'E': 0}))

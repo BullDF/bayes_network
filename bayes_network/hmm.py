@@ -146,7 +146,7 @@ def read_hmm_from_txt(file_name: str) -> HiddenMarkovModel:
         
 
 if __name__ == "__main__":
-    hmm = read_hmm_from_txt('hmm_ex.txt')
+    hmm = read_hmm_from_txt('../hmm_ex.txt')
     print(hmm.find_roots())
     print(hmm.time_step)
     print(hmm.hidden_domain)
