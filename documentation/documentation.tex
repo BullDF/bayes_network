@@ -1220,4 +1220,119 @@ The outputs tell us that it is almost equally likely that day 6 is either hot or
 
 \subsection{The Forward-Backward Algorithm} \label{sec:forward_backward_algorithm}
 
+\subsubsection{Theory}
+
+In the previous section, we discussed how the \textit{Forward} algorithm computes the \textit{forward} probabilities \(\alpha_t\) given the current and preceding observations. We can do the same for the \textit{backward} direction by defining the \textit{backward} filtered marginal \(\beta_t\) as follows:
+\[\beta_t(j) = \P(x_{t + 1:T} | Z_t = j).\]
+In other words, \(\beta_t(j)\) is the probability of observing \(x_{t+1:T}\) given that the hidden state at time \(t\) is \(j\). For the base case \(t = T\), we assume \(\beta_T(j) = 1\) for all \(j\). Then we can see the recurrence as follows with the \textit{Law of Total Probability}:
+\begin{align*}
+    \beta_t(j) &= \P(x_{t+1:T} | Z_t = j) \\
+    &= \P(x_{t+1}, x_{t+2:T} | Z_t = j) \\
+    &= \sum_i \P(x_{t+1}, x_{t+2:T} | Z_t = j, Z_{t+1}=i) \P(Z_{t+1} = i | Z_t = j) \\
+    &= \sum_i \P(x_{t+1}|Z_{t+1} = i) \P(x_{t+2:T}|Z_{t+1}=i)\P(Z_{t+1} = i | Z_t = j) \\
+    &= \sum_i \phi(i, x_{t+1}) \beta_{t+1}(i) \psi(j, i).
+\end{align*}
+Now that we have both the \textit{forward} probabilities \(\alpha_t\) and the \textit{backward} probabilities \(\beta_t\), we can start considering the objective probability for the \textit{Smoothing} task, for some \(t \in \{0, 1, \cdots, T-1\}\):
+\begin{align*}
+    \P(Z_t | \vec x) &= \P(Z_t | x_{0:T}) \\
+    &= \frac{\P(Z_t, x_{0:T})}{\P(x_{0:T})} \\
+    &\propto \P(Z_t, x_{0:T}) \\
+    &= \P(Z_t, x_{0:t}) \P(x_{t+1:T} | Z_t, x_{0:t}) \\
+    &= \P(Z_t, x_{0:t}) \P(x_{t+1:T} | Z_t) \\
+    &\propto \P(Z_t | x_{0:t}) \P(x_{t+1:T} | Z_t) \\
+    &= \alpha_t \beta_t.
+\end{align*}
+Overall, the \textit{Smoothing} task can be solved with a forward pass to compute the forward marginal \(\alpha_t\) and a backward pass to compute the backward marginal \(\beta_t\). The final output would then be the product of the two marginals.
+
+\subsubsection{Implementation}
+
+The \textit{Forward-Backward} algorithm has the following function signature:
+
+\begin{minted}{python}
+    forward_backward(hmm: HiddenMarkovModel, observations: list, t: int=0) -> dict
+\end{minted}
+
+This function computes and returns the normalized product of the forward and backward marginals at time step \(t\). To run the \textit{Smoothing} task, a function called \texttt{smoothing} is provided that has the following signature:
+
+\begin{minted}{python}
+    smoothing(hmm: HiddenMarkovModel, observations: list, t: int) -> dict
+\end{minted}
+
+This function basically calls the \texttt{forward\_backward} function to compute the probability of hidden state \(Z_t\) given the observations. With the HMM defined in \textit{Figure \ref{fig:hmm_probs_forward_backward}}, we can run code as follows:
+
+\begin{minted}{python}
+    >>> hmm = read_hmm_from_txt('hmm_ex.txt')
+    >>> smoothing(hmm, [0, 1, 2, 1, 1, 2, 0], 2)
+    {'c': 0.018344806972238406, 'h': 0.9816551930277615}
+    >>> smoothing(hmm, [0, 1, 2, 1, 1, 2, 0], 5)
+    {'c': 0.04663014310969049, 'h': 0.9533698568903095}
+\end{minted}
+
+Note that similar to the implementation of the \textit{Viterbi} algorithm, the \textit{Forward-Backward} algorithm also does not use the \texttt{time\_step} attribute of the \texttt{HiddenMarkovModel} instance. The algorithm would get the variable \(T\) from the length of the input observations. If the input \(t\) to the function is not compatible with \(T\) (i.e. calling \texttt{smoothing} with \(t \geq T\)), the function will raise an \texttt{ValueError}.
+
+\subsection{Connection with Variable Elimination}
+
+Note that in both \textit{Smoothing} and \textit{Filtering} tasks, we are interested in computing a probability of a random variable in a Bayesian Network conditioned on some other random variables in the network, and from \textit{Chapter \ref{sec:variable_elimination}} we know that the \textit{Variable Elimination} algorithm is exactly designed for this purpose. Therefore, we would expect to get the same probability outputs for the same sequence of observations. Given the same HMM setup as in \textit{Figure \ref{fig:hmm_probs_forward_backward}} but with \texttt{T = 7} stored in a file called \href{https://github.com/BullDF/bayes_network/blob/main/hmm_ex_t7.txt}{\texttt{hmm\_ex\_t7.txt}}, we would get the outputs
+
+\begin{minted}{python}
+    >>> hmm = read_hmm_from_txt('hmm_ex_t7.txt')
+
+    >>> filtering(hmm, [0, 1, 2, 1, 1, 2, 0])
+    {'h': 0.5070962425796098, 'c': 0.4929037574203903}
+    >>> variable_elimination(
+    ...     hmm,
+    ...     {'Z6'},
+    ...     {'X0': 0, 'X1': 1, 'X2': 2, 'X3': 1, 'X4': 1, 'X5': 2, 'X6': 0}
+    ... )
+
+    {{'Z6: c'}: 0.4929037574203903, {'Z6: h'}: 0.5070962425796098}
+
+    >>> smoothing(hmm, [0, 1, 2, 1, 1, 2, 0], 2)
+    {'c': 0.018344806972238406, 'h': 0.9816551930277615}
+    >>> variable_elimination(
+    ...     hmm,
+    ...     {'Z2'},
+    ...     {'X0': 0, 'X1': 1, 'X2': 2, 'X3': 1, 'X4': 1, 'X5': 2, 'X6': 0}
+    ... )
+
+    {{'Z2: h'}: 0.9816551930277616, {'Z2: c'}: 0.018344806972238416}
+
+    >>> smoothing(hmm, [0, 1, 2, 1, 1, 2, 0], 5)
+    {'c': 0.04663014310969049, 'h': 0.9533698568903095}
+    >>> variable_elimination(
+    ...     hmm,
+    ...     {'Z5'},
+    ...     {'X0': 0, 'X1': 1, 'X2': 2, 'X3': 1, 'X4': 1, 'X5': 2, 'X6': 0}
+    ... )
+
+    {{'Z5: h'}: 0.9533698568903095, {'Z5: c'}: 0.04663014310969049}
+\end{minted}
+
+So, if the \textit{Variable Elimination} algorithm does the same job and is more general, why do we need to implement the \textit{Forward-Backward} algorithm? The answer is that the \textit{Forward-Backward} algorithm is more efficient than the \textit{Variable Elimination} algorithm on an HMM. The following code illustrate this:
+
+\begin{minted}{python}
+    >>> import time
+    >>> trials = 100
+
+    >>> fb_total_time = 0
+    >>> for _ in range(trials):
+    ... start_time = time.time()
+    ... filtering(hmm, [0, 1, 2, 1, 1, 2, 0])
+    ... fb_total_time += time.time() - start_time
+
+    >>> fb_total_time / trials
+    2.892017364501953e-05
+
+    >>> vea_total_time = 0
+    >>> for _ in range(trials):
+    ... start_time = time.time()
+    ... variable_elimination(hmm, {'Z6'}, {'X0': 0, 'X1': 1, 'X2': 2, 'X3': 1, 'X4': 1, 'X5': 2, 'X6': 0})
+    ... vea_total_time += time.time() - start_time
+
+    >>> vea_total_time / trials
+    0.00014547586441040038
+\end{minted}
+
+For \texttt{T = 7} we don't see much difference, but it would become much more significant as \(T\) gets large.
+
 \end{document}
