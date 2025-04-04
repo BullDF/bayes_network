@@ -4,3 +4,4 @@ __pycache__/
 *.png
 _minted-documentation/
 .DS_Store
+*.tex
