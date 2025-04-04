@@ -1,5 +1,6 @@
 from hmm import HiddenMarkovModel, read_hmm_from_txt
 from typing import Any
+from variable_elimination import variable_elimination
 
 
 def normalize(probs: dict[Any, float]) -> dict[Any, float]:
@@ -79,8 +80,8 @@ def backward_step(hmm: HiddenMarkovModel, prev_beta: dict[Any, float], curr_obs:
 def backward(hmm: HiddenMarkovModel, observations: list, t: int=0) -> dict[Any, float]:
     if t < 0:
         raise ValueError('Time step t must be non-negative.')
-    if t >= len(observations):
-        raise ValueError('Time step t must be less than the length of observations.')
+    if t >= len(observations) - 1:
+        raise ValueError('Time step t must be less than the length of observations minus 1.')
     
     beta = {value: 1 / len(hmm.hidden_domain) for value in hmm.hidden_domain}
 
@@ -102,8 +103,28 @@ def smoothing(hmm: HiddenMarkovModel, observations: list, t: int) -> dict[Any, f
 
 
 if __name__ == "__main__":
-    hmm = read_hmm_from_txt('hmm_ex.txt')
-    # print(forward(hmm, [1, 0, 1, 0, 0], t=4))
-    # print(filtering(hmm, [1, 0, 1, 0, 0]))
-    # print(backward(hmm, [0, 1, 0], 0))
-    print(smoothing(hmm, [0, 1, 0], 0))
+    hmm = read_hmm_from_txt('hmm_ex_t7.txt')
+    print(filtering(hmm, [0, 1, 2, 1, 1, 2, 0]))
+    print(smoothing(hmm, [0, 1, 2, 1, 1, 2, 0], 2))
+    print(smoothing(hmm, [0, 1, 2, 1, 1, 2, 0], 5))
+
+    print(variable_elimination(hmm, {'Z6'}, {'X0': 0, 'X1': 1, 'X2': 2, 'X3': 1, 'X4': 1, 'X5': 2, 'X6': 0}))
+    print(variable_elimination(hmm, {'Z2'}, {'X0': 0, 'X1': 1, 'X2': 2, 'X3': 1, 'X4': 1, 'X5': 2, 'X6': 0}))
+    print(variable_elimination(hmm, {'Z5'}, {'X0': 0, 'X1': 1, 'X2': 2, 'X3': 1, 'X4': 1, 'X5': 2, 'X6': 0}))
+
+    import time
+    trials = 100
+    
+    fb_total_time = 0
+    for _ in range(trials):
+        start_time = time.time()
+        filtering(hmm, [0, 1, 2, 1, 1, 2, 0])
+        fb_total_time += time.time() - start_time
+    print(fb_total_time / trials)
+
+    vea_total_time = 0
+    for _ in range(trials):
+        start_time = time.time()
+        variable_elimination(hmm, {'Z6'}, {'X0': 0, 'X1': 1, 'X2': 2, 'X3': 1, 'X4': 1, 'X5': 2, 'X6': 0})
+        vea_total_time += time.time() - start_time
+    print(vea_total_time / trials)
