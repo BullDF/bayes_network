@@ -1316,23 +1316,27 @@ So, if the \textit{Variable Elimination} algorithm does the same job and is more
 
     >>> fb_total_time = 0
     >>> for _ in range(trials):
-    ... start_time = time.time()
-    ... filtering(hmm, [0, 1, 2, 1, 1, 2, 0])
-    ... fb_total_time += time.time() - start_time
+    ...     start_time = time.time()
+    ...     filtering(hmm, [0, 1, 2, 1, 1, 2, 0])
+    ...     fb_total_time += time.time() - start_time
 
     >>> fb_total_time / trials
     2.892017364501953e-05
 
     >>> vea_total_time = 0
     >>> for _ in range(trials):
-    ... start_time = time.time()
-    ... variable_elimination(hmm, {'Z6'}, {'X0': 0, 'X1': 1, 'X2': 2, 'X3': 1, 'X4': 1, 'X5': 2, 'X6': 0})
-    ... vea_total_time += time.time() - start_time
+    ...     start_time = time.time()
+    ...     variable_elimination(
+    ...         hmm,
+    ...         {'Z6'},
+    ...         {'X0': 0, 'X1': 1, 'X2': 2, 'X3': 1, 'X4': 1, 'X5': 2, 'X6': 0}
+    ...     )
+    ...     vea_total_time += time.time() - start_time
 
     >>> vea_total_time / trials
     0.00014547586441040038
 \end{minted}
 
-For \texttt{T = 7} we don't see much difference, but it would become much more significant as \(T\) gets large.
+For \texttt{T = 7} we don't see much difference, but the difference would become much more significant for larger \(T\).
 
 \end{document}
