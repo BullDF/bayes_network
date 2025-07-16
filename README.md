@@ -9,7 +9,7 @@ Please click [here](https://github.com/BullDF/bayes_network/blob/main/documentat
 ## Installation
 
 ```bash
-pip install -e .
+pip install bayes-network-bulldf
 ```
 
 ## Quick Start
