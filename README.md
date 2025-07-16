@@ -20,7 +20,7 @@ pip install -e .
 from bayes_network_bulldf import BayesNetwork, read_bayes_network_from_txt
 from bayes_network_bulldf import variable_elimination, ancestral_sampling
 
-# Load network from file
+# Load network from file (see bn_ex.txt for format example)
 bn = read_bayes_network_from_txt('bn_ex.txt')
 
 # Exact inference
@@ -39,7 +39,7 @@ prob = bn({'A': 1, 'B': 0, 'C': 1, 'D': 1, 'E': 0})
 from bayes_network_bulldf import HiddenMarkovModel, read_hmm_from_txt
 from bayes_network_bulldf import viterbi, filtering, smoothing
 
-# Load HMM from file
+# Load HMM from file (see hmm_ex.txt for format example)
 hmm = read_hmm_from_txt('hmm_ex.txt')
 
 # Most likely sequence (Viterbi)
@@ -67,8 +67,8 @@ past_state = smoothing(hmm, observations=[0, 1, 2, 1], t=1)
 - `smoothing(hmm, observations, t)`: Past state probabilities
 
 ### File I/O
-- `read_bayes_network_from_txt(filename)`: Load Bayesian network
-- `read_hmm_from_txt(filename)`: Load Hidden Markov Model
+- `read_bayes_network_from_txt(filename)`: Load Bayesian network (see [bn_ex.txt](bn_ex.txt))
+- `read_hmm_from_txt(filename)`: Load Hidden Markov Model (see [hmm_ex.txt](hmm_ex.txt))
 
 ## Requirements
 
